@@ -1,15 +1,17 @@
 import customtkinter
 
+from DriverStation.src.Networking.UnixConnection import UnixConnection
 from DriverStation.src.UI.Drive.DriveUI import DriveUI
+from DriverStation.src.UI.Listener.KeystrokeListener import KeystrokeListener
 
 
 class HomeTabView(customtkinter.CTkTabview):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, network: UnixConnection, **kwargs):
         super().__init__(master, **kwargs)
 
         self.add("Drive")
 
-        self.drive_tab = DriveUI(self)
+        self.drive_tab = DriveUI(parent=self, network=network)
         # self.add("")
         # self.add("Remote Management")
 
@@ -19,9 +21,12 @@ class App(customtkinter.CTk):
         super().__init__()
 
         self.geometry("1200x900")
-        self.grid_rowconfigure(0,weight=1)
-        self.grid_columnconfigure(0,weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-        self.tab_view = HomeTabView(master=self)
-        self.tab_view.grid(row=0,column=0,padx=20,pady=20,sticky="nsew")
+        self.networking = UnixConnection(host='10.93.24.4', port=5000)
 
+        self.keystroke_listener = KeystrokeListener(self.networking)
+
+        self.tab_view = HomeTabView(master=self, network=self.networking)
+        self.tab_view.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
