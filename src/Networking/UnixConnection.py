@@ -13,7 +13,6 @@ class UnixConnection():
             print("CONNECTION REFUSED")
         print("bob")
 
-
     def receive_thrd(self):
         return
 
@@ -30,11 +29,25 @@ class UnixConnection():
                 return False
 
     def drive_forwards(self):
-        self.verify_connection()
+        if not self.verify_connection():
+            return
 
-        self.sock.sendall(json.loads('{"TYPE": "cmd", "CONTENT": "drive_f"}'))
+        self.sock.sendall('{"TYPE": "cmd", "CONTENT": "drive_f"}'.encode())
 
     def drive_backwards(self):
-        self.verify_connection()
+        if not self.verify_connection():
+            return
 
-        self.sock.sendall((json.loads('{"TYPE": "cmd", "CONTENT: "drive_b"}')))
+        self.sock.sendall('{"TYPE": "cmd", "CONTENT: "drive_b"}'.encode())
+
+    def drive_right(self):
+        if not self.verify_connection():
+            return
+
+        self.sock.sendall('{"TYPE": "cmd", "CONTENT: "drive_r"}'.encode())
+
+    def drive_left(self):
+        if not self.verify_connection():
+            return
+
+        self.sock.sendall('{"TYPE": "cmd", "CONTENT: "drive_l"}'.encode())
