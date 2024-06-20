@@ -1,6 +1,6 @@
-import keyboard as keyboard
+import keyboard
 
-from DriverStation.src.Networking.UnixConnection import UnixConnection
+from src.Networking.UnixConnection import UnixConnection
 
 
 class KeystrokeListener:

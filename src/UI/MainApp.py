@@ -2,9 +2,9 @@ import threading
 
 import customtkinter
 
-from DriverStation.src.Networking.UnixConnection import UnixConnection
-from DriverStation.src.UI.Drive.DriveUI import DriveUI
-from DriverStation.src.UI.Listener.KeystrokeListener import KeystrokeListener
+from src.Networking.UnixConnection import UnixConnection
+from src.UI.Drive.DriveUI import DriveUI
+from src.UI.Listener.KeystrokeListener import KeystrokeListener
 
 
 class HomeTabView(customtkinter.CTkTabview):

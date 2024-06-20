@@ -1,6 +1,6 @@
 import customtkinter
 
-from DriverStation.src.Networking.UnixConnection import UnixConnection
+from src.Networking.UnixConnection import UnixConnection
 
 GREEN_HOVER = "#005500"
 
