@@ -11,5 +11,7 @@ class KeystrokeListener:
         while True:
             if keyboard.is_pressed('w'):
                 self.networking.drive_forwards()
+                print("Forward")
             elif keyboard.is_pressed('s'):
                 self.networking.drive_backwards()
+                print("Backward")

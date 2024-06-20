@@ -17,8 +17,24 @@ class UnixConnection():
     def receive_thrd(self):
         return
 
+    def verify_connection(self) -> bool:
+        try:
+            self.sock.sendall("B".encode())
+            return True
+        except:
+            try:
+                self.sock.connect((self.HOST, self.PORT))
+                return True
+            except:
+                print("CONNECTION REFUSED")
+                return False
+
     def drive_forwards(self):
+        self.verify_connection()
+
         self.sock.sendall(json.loads('{"TYPE": "cmd", "CONTENT": "drive_f"}'))
 
     def drive_backwards(self):
+        self.verify_connection()
+
         self.sock.sendall((json.loads('{"TYPE": "cmd", "CONTENT: "drive_b"}')))
