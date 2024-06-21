@@ -47,7 +47,7 @@ class NetworkStatus(customtkinter.CTkFrame):
                                              fg_color="green",
                                              bg_color="transparent",
                                              hover_color=GREEN_HOVER,
-                                             command=self.right)
+                                             command=self.right_f)
         self.right.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
 
         self.left = customtkinter.CTkButton(master=self,
@@ -55,7 +55,7 @@ class NetworkStatus(customtkinter.CTkFrame):
                                             fg_color="green",
                                             bg_color="transparent",
                                             hover_color=GREEN_HOVER,
-                                            command=self.left)
+                                            command=self.left_f)
         self.left.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         self.stop = customtkinter.CTkButton(master=self,
@@ -71,8 +71,8 @@ class NetworkStatus(customtkinter.CTkFrame):
     def backward(self):
         self.network.drive_backwards()
 
-    def right(self):
+    def right_f(self):
         self.network.drive_right()
 
-    def left(self):
+    def left_f(self):
         self.network.drive_left()
