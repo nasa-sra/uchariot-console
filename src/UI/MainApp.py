@@ -35,5 +35,5 @@ class App(customtkinter.CTk):
 
         self.keystroke_listener = KeystrokeListener(networking=self.networking, ui=self.tab_view.drive_tab)
         self.listener_thread = threading.Thread(target=self.keystroke_listener.main_thrd)
-        self.listener_thread.daemon = True
+        # self.listener_thread.daemon = True
         self.listener_thread.start()

@@ -48,10 +48,13 @@ class KeystrokeListener:
         self.listener.start()
 
         while True:
+            print(f"{self.left_current_state} {self.right_current_state}")
             if self.left_current_state == SideState.FORWARD:
+
                 self.ui.set_left(1)
                 self.networking.set_left_speed(self.speed)
             elif self.left_current_state == SideState.BACK:
+
                 self.ui.set_left(-1)
                 self.networking.set_left_speed(-self.speed)
             else:
@@ -59,9 +62,11 @@ class KeystrokeListener:
                 self.networking.set_left_speed(0)
 
             if self.right_current_state == SideState.FORWARD:
+
                 self.ui.set_right(1)
                 self.networking.set_right_speed(self.speed)
             elif self.right_current_state == SideState.BACK:
+
                 self.ui.set_right(-1)
                 self.networking.set_right_speed(-self.speed)
             else:
