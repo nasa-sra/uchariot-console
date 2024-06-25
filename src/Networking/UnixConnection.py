@@ -1,5 +1,6 @@
 import json
 import socket
+from threading import Thread
 
 
 class UnixConnection():
@@ -8,6 +9,8 @@ class UnixConnection():
         self.PORT = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.enabled = enabled
+
+        self.controller_enabled = False
         if not enabled:
             return
 
@@ -15,10 +18,15 @@ class UnixConnection():
             self.sock.connect((self.HOST, self.PORT))
         except ConnectionRefusedError:
             print("CONNECTION REFUSED")
-        print("bob")
+
+        # self.recv_thrd: Thread = Thread(target=self.receive_thrd)
+        # self.recv_thrd.setDaemon(True)
+        # self.recv_thrd.start()
 
     def receive_thrd(self):
-        return
+        while True:
+            msg = self.sock.recv(2048)
+            print(f'RECEIVE_DATA: {msg}')
 
     def verify_connection(self) -> bool:
         if not self.enabled:
@@ -34,26 +42,64 @@ class UnixConnection():
                 print("CONNECTION REFUSED")
                 return False
 
-    def set_left_speed(self, speed: int):
-        if not self.verify_connection():
-            print(f"Failed to send: {{\"left_speed\": {speed}}}")
+    # def set_left_speed(self, speed: int):
+    #     if not self.verify_connection():
+    #         print(f"Failed to send: {{\"left_speed\": {speed}}}")
+    #         return
+    #
+    #     print(f'sent msg_l - {{"left_speed": {speed}}}')
+    #     self.sock.send(f'{{"left_speed": {speed}}}'.encode())
+    #
+    # def set_right_speed(self, speed: int):
+    #     if not self.verify_connection():
+    #         print(f"Failed to send: {{\"right_speed\": {speed}}}")
+    #         return
+    #
+    #     print(f'sent msg_r - {{right_speed: {speed}}}')
+    #     self.sock.send(f'{{"right_speed": {speed}}}'.encode())
+
+    def set_speed(self, l_speed: int, r_speed: int):
+        if not self.controller_enabled:
             return
 
-        print(f'sent msg_l - {{"left_speed": {speed}}}')
-        self.sock.sendall(f'{{"left_speed": {speed}}}'.encode())
+        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # try:
+        #     self.sock.connect((self.HOST, self.PORT))
+        # except ConnectionRefusedError:
+        #     print("CONNECTION REFUSED")
 
-    def set_right_speed(self, speed: int):
-        if not self.verify_connection():
-            print(f"Failed to send: {{\"right_speed\": {speed}}}")
-            return
+        # if not self.verify_connection():
+        #     print(f"Failed to send: {{\"left_speed\": {l_speed}, \"right_speed\": {r_speed}}}")
+        #     return
 
-        print(f'sent msg_r - {{right_speed: {speed}}}')
-        self.sock.sendall(f'{{right_speed: {speed}}}'.encode())
+        print(f'sent msg_r - {{"left_speed": {l_speed}, "right_speed": {r_speed}}};')
+        self.sock.sendall(f'[teleop_drive] {{"left_speed": {l_speed}, "right_speed": {r_speed}}};'.encode())
+
+    def set_teleop(self):
+        # if not self.verify_connection():
+        #     print("Failed to connect teleop")
+        #     return
+
+        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # try:
+        #     self.sock.connect((self.HOST, self.PORT))
+        # except ConnectionRefusedError:
+        #     print("CONNECTION REFUSED")
+
+        print("sent teleop cmd [set_controller] {{\"name\": \"teleop\"}};")
+        self.sock.sendall(f'[set_controller] {{"name": "teleop"}};'.encode())
+        self.controller_enabled = True
 
     def stop(self):
-        if not self.verify_connection():
-            return
+        # if not self.verify_connection():
+        #     return
 
-        self.sock.sendall('{"left_speed": 0, "right_speed": 0}'.encode())
+        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # try:
+        #     self.sock.connect((self.HOST, self.PORT))
+        # except ConnectionRefusedError:
+        #     print("CONNECTION REFUSED")
+
+        self.sock.sendall('{"left_speed": 0, "right_speed": 0};'.encode())
 
     # def

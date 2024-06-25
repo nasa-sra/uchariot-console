@@ -28,7 +28,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.networking = UnixConnection(host='10.93.24.4', port=8000, enabled=True)
+        self.networking = UnixConnection(host='10.93.24.4', port=8001, enabled=True)
 
         self.tab_view = HomeTabView(master=self, network=self.networking)
         self.tab_view.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")

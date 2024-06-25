@@ -120,7 +120,7 @@ class NetworkStatus(customtkinter.CTkFrame):
 
             self.speed_f = customtkinter.CTkFrame(master=self)
             self.speed_f.grid(column=0, row=0, padx=5, pady=5, sticky="nsew")
-            self.speed_f.grid_rowconfigure((0, 1), weight=1)
+            self.speed_f.grid_rowconfigure((0, 1, 2), weight=1)
             self.speed_f.grid_columnconfigure((0, 1, 2), weight=1)
             self.speed_slider = customtkinter.CTkSlider(master=self.speed_f,
                                                         from_=0,
@@ -184,6 +184,18 @@ class NetworkStatus(customtkinter.CTkFrame):
             self.speed_var.trace_add("write", self.update_s_label)
             self.left_var.trace_add("write", self.update_l_label)
             self.right_var.trace_add("write", self.update_r_label)
+
+            self.connect_button = customtkinter.CTkButton(master=self,
+                                                          text="Connect",
+                                                          command=self.connect_teleop)
+            self.connect_button.grid(column=0, row=1, columnspan=3, padx=25, pady=25, sticky="nsew")
+
+        def connect_teleop(self):
+            self.network.set_teleop()
+
+
+        def update_speed_gui(self, speed: int):
+            self.speed_slider.set(speed)
 
         def update_s_label(self, *args):
             self.speed_txt.configure(text=self.speed_var.get())

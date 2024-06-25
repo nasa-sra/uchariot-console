@@ -1,7 +1,7 @@
-from datetime import time, datetime, timedelta
+from datetime import datetime
+from enum import Enum
 
 from pynput.keyboard import Key, Listener, KeyCode
-from enum import Enum
 
 from src.Networking.UnixConnection import UnixConnection
 from src.UI.Drive.DriveUI import DriveUI
@@ -31,61 +31,97 @@ class KeystrokeListener:
             print(f"{key} pressed.")
         if key == KeyCode(char="w"):
             self.left_current_state = SideState.FORWARD
+            self.networking.set_speed(self.speed, self.speed if self.right_current_state == SideState.FORWARD else (
+                -self.speed if self.right_current_state == SideState.BACK else 0))
         elif key == KeyCode(char="s"):
             self.left_current_state = SideState.BACK
+            self.networking.set_speed(-self.speed, self.speed if self.right_current_state == SideState.FORWARD else (
+                -self.speed if self.right_current_state == SideState.BACK else 0))
 
         if key == KeyCode(char="i"):
             self.right_current_state = SideState.FORWARD
+            self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
+                -self.speed if self.left_current_state == SideState.BACK else 0), self.speed)
         elif key == KeyCode(char="k"):
             self.right_current_state = SideState.BACK
+            self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
+                -self.speed if self.left_current_state == SideState.BACK else 0), -self.speed)
 
         if key == Key.up:
             self.speed += self.increment
+            self.ui.set_speed(self.speed)
         elif key == Key.down:
             self.speed -= self.increment
+            self.ui.set_speed(self.speed)
 
     def on_release(self, key):
         if key == KeyCode(char="w") and self.left_current_state == SideState.FORWARD:
             self.left_current_state = SideState.STOPPED
+            self.networking.set_speed(0, self.speed if self.right_current_state == SideState.FORWARD else (
+                -self.speed if self.right_current_state == SideState.BACK else 0))
+            self.ui.set_left(0)
         elif key == KeyCode(char="s") and self.left_current_state == SideState.BACK:
             self.left_current_state = SideState.STOPPED
+            self.networking.set_speed(0, self.speed if self.right_current_state == SideState.FORWARD else (
+                -self.speed if self.right_current_state == SideState.BACK else 0))
+            self.ui.set_left(0)
 
         if key == KeyCode(char="i") and self.right_current_state == SideState.FORWARD:
             self.right_current_state = SideState.STOPPED
+            self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
+                -self.speed if self.left_current_state == SideState.BACK else 0), 0)
+
         elif key == KeyCode(char="k") and self.right_current_state == SideState.BACK:
             self.right_current_state = SideState.STOPPED
+            self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
+                -self.speed if self.left_current_state == SideState.BACK else 0), 0)
 
     def main_thrd(self):
         self.listener = Listener(on_press=self.on_press, on_release=self.on_release)
         self.listener.start()
 
         last_time = datetime.now()
+
+        l_prev_state = self.left_current_state
+        r_prev_state = self.right_current_state
+
+        self.networking.set_speed(0, 0)
+
+        count = 0
         while True:
-            if (datetime.now() - last_time).microseconds < (1/50)*1e6:
+            if (datetime.now() - last_time).microseconds < (1 / 25) * 1e6:
                 continue
             else:
                 last_time = datetime.now()
             # print(f"{self.left_current_state} {self.right_current_state}")
+            l_speed: int = 0
+            r_speed: int = 0
+
+            # count+=1
+
             if self.left_current_state == SideState.FORWARD:
-            #
+                #
                 self.ui.set_left(1)
-                self.networking.set_left_speed(self.speed)
+                l_speed = self.speed
             elif self.left_current_state == SideState.BACK:
-            #
+                #
                 self.ui.set_left(-1)
-                self.networking.set_left_speed(-self.speed)
+                l_speed = -self.speed
             else:
                 self.ui.set_left(0)
-                self.networking.set_left_speed(0)
             #
             if self.right_current_state == SideState.FORWARD:
-            #
+                #
                 self.ui.set_right(1)
-                self.networking.set_right_speed(self.speed)
+                r_speed = self.speed
             elif self.right_current_state == SideState.BACK:
-            #
+                #
                 self.ui.set_right(-1)
-                self.networking.set_right_speed(-self.speed)
+                r_speed = -self.speed
             else:
                 self.ui.set_right(0)
-                self.networking.set_right_speed(0)
+
+            # if self.left_current_state != l_prev_state or self.right_current_state != r_prev_state:
+            # self.networking.set_speed(l_speed, r_speed)
+            # l_prev_state = self.left_current_state
+            # r_prev_state = self.right_current_state
