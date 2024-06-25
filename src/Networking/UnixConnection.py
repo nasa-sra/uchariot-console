@@ -7,7 +7,7 @@ class UnixConnection():
         self.HOST = host
         self.PORT = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        self.enabled = enabled
         if not enabled:
             return
 
@@ -21,6 +21,8 @@ class UnixConnection():
         return
 
     def verify_connection(self) -> bool:
+        if not self.enabled:
+            return False
         try:
             self.sock.sendall("B".encode())
             return True
@@ -34,14 +36,18 @@ class UnixConnection():
 
     def set_left_speed(self, speed: int):
         if not self.verify_connection():
+            print(f"Failed to send: {{\"left_speed\": {speed}}}")
             return
 
+        print(f'sent msg_l - {{"left_speed": {speed}}}')
         self.sock.sendall(f'{{"left_speed": {speed}}}'.encode())
 
     def set_right_speed(self, speed: int):
         if not self.verify_connection():
+            print(f"Failed to send: {{\"right_speed\": {speed}}}")
             return
 
+        print(f'sent msg_r - {{right_speed: {speed}}}')
         self.sock.sendall(f'{{right_speed: {speed}}}'.encode())
 
     def stop(self):

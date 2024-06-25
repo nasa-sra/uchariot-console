@@ -124,14 +124,14 @@ class NetworkStatus(customtkinter.CTkFrame):
             self.speed_f.grid_columnconfigure((0, 1, 2), weight=1)
             self.speed_slider = customtkinter.CTkSlider(master=self.speed_f,
                                                         from_=0,
-                                                        to=10,
-                                                        number_of_steps=10,
+                                                        to=5000,
+                                                        number_of_steps=50,
                                                         state="disabled",
                                                         orientation="vertical",
                                                         variable=self.speed_var,
                                                         width=20)
             self.speed_slider.grid(column=0, row=0, columnspan=2, padx=10, pady=10, sticky="ns")
-            self.speed_slider.set(5)
+            self.speed_slider.set(2500)
             self.speed_txt = customtkinter.CTkLabel(master=self.speed_f,
                                                     text=self.speed_var.get())
             self.speed_txt.grid(column=2, row=0, sticky="ew", padx=(0, 20))
