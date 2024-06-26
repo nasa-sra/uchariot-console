@@ -58,7 +58,7 @@ class UnixConnection():
     #     print(f'sent msg_r - {{right_speed: {speed}}}')
     #     self.sock.send(f'{{"right_speed": {speed}}}'.encode())
 
-    def set_speed(self, l_speed: int, r_speed: int):
+    def set_speed(self, speed: int, drive_power: float, turn: float):
         if not self.controller_enabled:
             return
 
@@ -72,8 +72,8 @@ class UnixConnection():
         #     print(f"Failed to send: {{\"left_speed\": {l_speed}, \"right_speed\": {r_speed}}}")
         #     return
 
-        print(f'sent msg_r - {{"left_speed": {l_speed}, "right_speed": {r_speed}}};')
-        self.sock.sendall(f'[teleop_drive] {{"left_speed": {l_speed}, "right_speed": {r_speed}}};'.encode())
+        print(f'sent msg - [teleop_drive] {{"speed": {speed}, "fwd": {drive_power}, "turn": {turn}}};')
+        self.sock.sendall(f'[teleop_drive] {{"speed": {speed}, "fwd": {drive_power}, "turn": {turn}}};'.encode())
 
     def set_teleop(self):
         # if not self.verify_connection():

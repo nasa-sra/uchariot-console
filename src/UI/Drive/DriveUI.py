@@ -1,7 +1,6 @@
-from tkinter import IntVar
+from tkinter import DoubleVar, IntVar
 
 import customtkinter
-from customtkinter import CTkLabel
 
 from src.Networking.UnixConnection import UnixConnection
 
@@ -24,11 +23,11 @@ class DriveUI:
     def set_speed(self, speed):
         self.network_status.right_frame.speed_slider.set(speed)
 
-    def set_left(self, speed: int):
-        self.network_status.right_frame.left_slider.set(speed)
+    def set_left(self, speed: float):
+        self.network_status.right_frame.drive_slider.set(speed)
 
-    def set_right(self, speed: int):
-        self.network_status.right_frame.right_slider.set(speed)
+    def set_right(self, speed: float):
+        self.network_status.right_frame.turn_slider.set(speed)
 
 
 class NetworkStatus(customtkinter.CTkFrame):
@@ -102,9 +101,6 @@ class NetworkStatus(customtkinter.CTkFrame):
     # def left_f(self):
     #     self.network.drive_left()
 
-    def connect(self):
-        self.network.connect()
-
     def stop(self):
         self.network.stop()
 
@@ -115,8 +111,8 @@ class NetworkStatus(customtkinter.CTkFrame):
             self.network = network
 
             self.speed_var: IntVar = IntVar(master=self, name="speed_var")
-            self.left_var: IntVar = IntVar(master=self, name="left_var")
-            self.right_var: IntVar = IntVar(master=self, name="right_var")
+            self.drive_var: DoubleVar = DoubleVar(master=self, name="left_var")
+            self.turn_var: DoubleVar = DoubleVar(master=self, name="right_var")
 
             self.speed_f = customtkinter.CTkFrame(master=self)
             self.speed_f.grid(column=0, row=0, padx=5, pady=5, sticky="nsew")
@@ -139,60 +135,63 @@ class NetworkStatus(customtkinter.CTkFrame):
                                                       text="Speed")
             self.speed_label.grid(column=0, row=1, columnspan=3, sticky="ew")
 
-            self.left_f = customtkinter.CTkFrame(master=self)
-            self.left_f.grid(column=1, row=0, padx=5, pady=5, sticky="nsew")
-            self.left_f.grid_rowconfigure((0, 1), weight=1)
-            self.left_f.grid_columnconfigure((0, 1), weight=1)
-            self.left_slider = customtkinter.CTkSlider(master=self.left_f,
-                                                       from_=-1,
-                                                       to=1,
-                                                       number_of_steps=2,
-                                                       state="disabled",
-                                                       orientation="vertical",
-                                                       variable=self.left_var,
-                                                       width=20)
-            self.left_slider.grid(column=0, row=0, padx=10, pady=10, sticky="ns")
-            self.left_slider.set(0)
-            self.left_txt = customtkinter.CTkLabel(master=self.left_f,
-                                                   text=self.left_var.get())
-            self.left_txt.grid(column=2, row=0, sticky="ew", padx=(0, 20))
-            self.left_label = customtkinter.CTkLabel(master=self.left_f,
-                                                      text="Left")
-            self.left_label.grid(column=0, row=1, columnspan=3, sticky="ew")
-
-            self.right_f = customtkinter.CTkFrame(master=self)
-            self.right_f.grid(column=2, row=0, padx=5, pady=5, sticky="nsew")
-            self.right_f.grid_rowconfigure((0, 1), weight=1)
-            self.right_f.grid_columnconfigure((0, 1), weight=1)
-            self.right_slider = customtkinter.CTkSlider(master=self.right_f,
+            self.drive_f = customtkinter.CTkFrame(master=self)
+            self.drive_f.grid(column=1, row=0, padx=5, pady=5, sticky="nsew")
+            self.drive_f.grid_rowconfigure((0, 1), weight=1)
+            self.drive_f.grid_columnconfigure((0, 1), weight=1)
+            self.drive_slider = customtkinter.CTkSlider(master=self.drive_f,
                                                         from_=-1,
                                                         to=1,
-                                                        number_of_steps=2,
+                                                        number_of_steps=100,
                                                         state="disabled",
                                                         orientation="vertical",
-                                                        variable=self.right_var,
+                                                        variable=self.drive_var,
                                                         width=20)
-            self.right_slider.grid(column=0, row=0, padx=10, pady=10, sticky="ns")
-            self.right_slider.set(0)
-            self.right_txt = customtkinter.CTkLabel(master=self.right_f,
-                                                    text=self.right_var.get())
+            self.drive_slider.grid(column=0, row=0, padx=10, pady=10, sticky="ns")
+            self.drive_slider.set(0)
+            self.drive_txt = customtkinter.CTkLabel(master=self.drive_f,
+                                                    text=self.drive_var.get())
+            self.drive_txt.grid(column=2, row=0, sticky="ew", padx=(0, 20))
+            self.drive_label = customtkinter.CTkLabel(master=self.drive_f,
+                                                      text="Left")
+            self.drive_label.grid(column=0, row=1, columnspan=3, sticky="ew")
+
+            self.turn_f = customtkinter.CTkFrame(master=self)
+            self.turn_f.grid(column=2, row=0, padx=5, pady=5, sticky="nsew")
+            self.turn_f.grid_rowconfigure((0, 1), weight=1)
+            self.turn_f.grid_columnconfigure((0, 1), weight=1)
+            self.turn_slider = customtkinter.CTkSlider(master=self.turn_f,
+                                                       from_=-1,
+                                                       to=1,
+                                                       number_of_steps=100,
+                                                       state="disabled",
+                                                       orientation="vertical",
+                                                       variable=self.turn_var,
+                                                       width=20)
+            self.turn_slider.grid(column=0, row=0, padx=10, pady=10, sticky="ns")
+            self.turn_slider.set(0)
+            self.right_txt = customtkinter.CTkLabel(master=self.turn_f,
+                                                    text=self.turn_var.get())
             self.right_txt.grid(column=2, row=0, sticky="ew", padx=(0, 20))
-            self.right_label = customtkinter.CTkLabel(master=self.right_f,
+            self.right_label = customtkinter.CTkLabel(master=self.turn_f,
                                                       text="Right")
             self.right_label.grid(column=0, row=1, columnspan=3, sticky="ew")
 
             self.speed_var.trace_add("write", self.update_s_label)
-            self.left_var.trace_add("write", self.update_l_label)
-            self.right_var.trace_add("write", self.update_r_label)
+            self.drive_var.trace_add("write", self.update_d_label)
+            self.turn_var.trace_add("write", self.update_t_label)
 
             self.connect_button = customtkinter.CTkButton(master=self,
-                                                          text="Connect",
+                                                          text="Set Teleop",
                                                           command=self.connect_teleop)
-            self.connect_button.grid(column=0, row=1, columnspan=3, padx=25, pady=25, sticky="nsew")
+            self.connect_button.grid(column=0, row=1, columnspan=2, padx=(25,5), pady=25, sticky="nsew")
+
+            self.reconnect_button = customtkinter.CTkButton(master=self,
+                                                            text="Reconnect")
+            self.reconnect_button.grid(column=2,row=1,padx=(5,25),pady=25,sticky="nsew")
 
         def connect_teleop(self):
             self.network.set_teleop()
-
 
         def update_speed_gui(self, speed: int):
             self.speed_slider.set(speed)
@@ -200,8 +199,8 @@ class NetworkStatus(customtkinter.CTkFrame):
         def update_s_label(self, *args):
             self.speed_txt.configure(text=self.speed_var.get())
 
-        def update_l_label(self, *args):
-            self.left_txt.configure(text=self.left_var.get())
+        def update_d_label(self, *args):
+            self.drive_txt.configure(text=f"{self.drive_var.get():2.2f}")
 
-        def update_r_label(self, *args):
-            self.right_txt.configure(text=self.right_var.get())
+        def update_t_label(self, *args):
+            self.right_txt.configure(text=f"{self.turn_var.get():2.2f}")
