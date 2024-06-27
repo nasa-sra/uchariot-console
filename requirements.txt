@@ -1,0 +1,4 @@
+customtkinter
+pyglet
+pynput
+
