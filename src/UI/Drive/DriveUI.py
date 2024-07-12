@@ -17,6 +17,12 @@ class DriveUI:
         p_tab.grid_columnconfigure((0, 1), weight=1, pad=10)
         p_tab.grid_rowconfigure(0, weight=1)
 
+        # network.data_tab =
+
+        self.left_tab = customtkinter.CTkTextbox(master=p_tab, state="disabled")
+        self.left_tab.grid(row=0,column=0, sticky="nsew",padx=10,pady=10)
+        network.data_tab = self.left_tab
+
         self.network_status = NetworkStatus(master=p_tab, network=network)
         self.network_status.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
@@ -184,11 +190,11 @@ class NetworkStatus(customtkinter.CTkFrame):
             self.connect_button = customtkinter.CTkButton(master=self,
                                                           text="Set Teleop",
                                                           command=self.connect_teleop)
-            self.connect_button.grid(column=0, row=1, columnspan=2, padx=(25,5), pady=25, sticky="nsew")
+            self.connect_button.grid(column=0, row=1, columnspan=2, padx=(25, 5), pady=25, sticky="nsew")
 
             self.reconnect_button = customtkinter.CTkButton(master=self,
                                                             text="Reconnect")
-            self.reconnect_button.grid(column=2,row=1,padx=(5,25),pady=25,sticky="nsew")
+            self.reconnect_button.grid(column=2, row=1, padx=(5, 25), pady=25, sticky="nsew")
 
         def connect_teleop(self):
             self.network.set_teleop()

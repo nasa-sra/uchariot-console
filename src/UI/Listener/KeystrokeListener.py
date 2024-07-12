@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 from enum import Enum
 
@@ -21,9 +22,11 @@ class KeystrokeListener:
         self.left_current_state: SideState = SideState.STOPPED
         self.right_current_state: SideState = SideState.STOPPED
 
+        self.persistent_state: int = 2
+
         self.listener: Listener = None
         self.speed: int = 2500
-        self.increment = 50
+        self.increment = 250
 
         controllers = pyglet.input.get_controllers()
 
@@ -36,6 +39,8 @@ class KeystrokeListener:
             print(f"{key.char} pressed")
         except AttributeError:
             print(f"{key} pressed.")
+
+        valid = False
         #     if key == KeyCode(char="w"):
         #         self.left_current_state = SideState.FORWARD
         #         self.networking.set_speed(self.speed, self.speed if self.right_current_state == SideState.FORWARD else (
@@ -45,29 +50,45 @@ class KeystrokeListener:
         #         self.networking.set_speed(-self.speed, self.speed if self.right_current_state == SideState.FORWARD else (
         #             -self.speed if self.right_current_state == SideState.BACK else 0))
         #
-        #     if key == KeyCode(char="i"):
-        #         self.right_current_state = SideState.FORWARD
-        #         self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
-        #             -self.speed if self.left_current_state == SideState.BACK else 0), self.speed)
-        #     elif key == KeyCode(char="k"):
-        #         self.right_current_state = SideState.BACK
-        #         self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
-        #             -self.speed if self.left_current_state == SideState.BACK else 0), -self.speed)
+        # if key == KeyCode(char="i"):
+        #     # self.right_current_state = SideState.FORWARD
+        #     self.persistent_state = 1
+        #     print("persistent")
+        #     valid = True
+        #     self.networking.set_speed(self.speed, 1, 0.5)
+        # elif key == KeyCode(char="k"):
+        #     # self.right_current_state = SideState.BACK
+        #     self.persistent_state = 1
+        #     print("persistent")
+        #     valid = True
+        #     self.networking.set_speed(self.speed, 1, 1)
         #
         if key == Key.shift:
-            if self.increment == 50:
-                self.increment = 100
-            elif self.increment == 100:
-                self.increment = 250
-            elif self.increment == 250:
-                self.increment = 50
+            self.networking.set_speed(0,0,0)
+            self.persistent_state = 2
+
+        if key == Key.right:
+            self.persistent_state = 0
+            valid = True
+        #     if self.increment == 50:
+        #         self.increment = 100
+        #     elif self.increment == 100:
+        #         self.increment = 500
+        #     elif self.increment == 500:
+        #         self.increment = 50
+
+        if not valid:
+            self.networking.set_speed(0,0,0)
+            self.persistent_state = 2
 
         if key == Key.up:
-            self.speed += self.increment
+            self.speed = max(0,min(5000,self.speed+self.increment))
             self.ui.set_speed(self.speed)
+            valid = True
         elif key == Key.down:
-            self.speed -= self.increment
+            self.speed = max(0,min(5000,self.speed-self.increment))
             self.ui.set_speed(self.speed)
+            valid = True
 
     #
     def on_release(self, key):
@@ -84,13 +105,21 @@ class KeystrokeListener:
 
         if key == KeyCode(char="i") and self.right_current_state == SideState.FORWARD:
             self.right_current_state = SideState.STOPPED
-            self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
-                -self.speed if self.left_current_state == SideState.BACK else 0), 0,0)
+            self.networking.set_speed(0,0,0)
+            self.persistent_state = 0
+
+        if key == KeyCode(char="i"):
+            self.networking.set_speed(0, 0, 0)
+            self.persistent_state = 0
+
+        if key == KeyCode(char="k"):
+            self.networking.set_speed(0, 0, 0)
+            self.persistent_state = 0
 
         elif key == KeyCode(char="k") and self.right_current_state == SideState.BACK:
             self.right_current_state = SideState.STOPPED
-            self.networking.set_speed(self.speed if self.left_current_state == SideState.FORWARD else (
-                -self.speed if self.left_current_state == SideState.BACK else 0), 0)
+            self.networking.set_speed(0,0,0)
+            self.persistent_state = 0
 
     def main_thrd(self):
         self.listener = Listener(on_press=self.on_press, on_release=self.on_release)
@@ -117,11 +146,16 @@ class KeystrokeListener:
             else:
                 last_time = datetime.now()
 
-            self.networking.set_speed(self.speed,
-                                      -round(self.controller_d.lefty, 2),
-                                      round(self.controller_d.rightx, 2))
-            self.ui.set_left(-round(self.controller_d.lefty, 2))
-            self.ui.set_right(round(self.controller_d.rightx, 2))
+            if self.persistent_state == 0:
+                print(self.controller_d.lefty + " " + self.controller_d.rightx)
+                self.networking.set_speed(self.speed,
+                                          -round(self.controller_d.lefty, 2),
+                                          round(self.controller_d.rightx, 2))
+                self.ui.set_left(-round(self.controller_d.lefty, 2))
+                self.ui.set_right(round(self.controller_d.rightx, 2))
+            elif self.persistent_state == 2:
+                self.networking.set_speed(0,0,0)
+
             # print(f"{self.left_current_state} {self.right_current_state}")
             l_speed: int = 0
             r_speed: int = 0
