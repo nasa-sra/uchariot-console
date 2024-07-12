@@ -10,7 +10,7 @@ class UnixConnection():
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.enabled = enabled
 
-        self.data_tab = None
+        # self.data_tab = None
 
         self.controller_enabled = False
         if not enabled:
@@ -21,9 +21,9 @@ class UnixConnection():
         except ConnectionRefusedError:
             print("CONNECTION REFUSED")
 
-        self.recv_thrd: Thread = Thread(target=self.receive_thrd)
-        self.recv_thrd.setDaemon(True)
-        self.recv_thrd.start()
+        # self.recv_thrd: Thread = Thread(target=self.receive_thrd)
+        # self.recv_thrd.setDaemon(True)
+        # self.recv_thrd.start()
 
     def receive_thrd(self):
         while True:

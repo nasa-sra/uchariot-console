@@ -21,7 +21,7 @@ class DriveUI:
 
         self.left_tab = customtkinter.CTkTextbox(master=p_tab, state="disabled")
         self.left_tab.grid(row=0,column=0, sticky="nsew",padx=10,pady=10)
-        network.data_tab = self.left_tab
+        # network.data_tab = self.left_tab
 
         self.network_status = NetworkStatus(master=p_tab, network=network)
         self.network_status.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)

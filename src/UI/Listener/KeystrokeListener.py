@@ -22,7 +22,7 @@ class KeystrokeListener:
         self.left_current_state: SideState = SideState.STOPPED
         self.right_current_state: SideState = SideState.STOPPED
 
-        self.persistent_state: int = 2
+        self.persistent_state: int = 0
 
         self.listener: Listener = None
         self.speed: int = 2500
