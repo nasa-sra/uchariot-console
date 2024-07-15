@@ -1,4 +1,5 @@
 import threading
+import json
 from abc import ABC
 
 import customtkinter
@@ -21,20 +22,22 @@ class App(customtkinter.CTk):
         self.iconphoto(True, icon)
         self.wm_protocol("WM_DELETE_WINDOW", self.close)
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=3)
         self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
 
         self.networking = UnixConnection()
 
         self.connectionFrame = ConnectionFrame(self, networking=self.networking, defaultHost="localhost", defaultPort='8001')
-        self.connectionFrame.grid(row=0, column=0, padx=20, pady=(20,0), sticky="new")
+        self.connectionFrame.grid(row=0, column=0, columnspan=2, padx=20, pady=(20,0), sticky="new")
 
-
+        self.telemetryFrame = TelemetryFrame(self, networking=self.networking)
+        self.telemetryFrame.grid(row=1, column=0, padx=(20,0), pady=(30,20), sticky="nsew")
 
         self.tab_view = HomeTabView(master=self, network=self.networking)
-        self.tab_view.grid(row=2, column=0, padx=20, pady=(10,20), sticky="ew")
+        self.tab_view.grid(row=1, column=1, padx=20, pady=(10,20), sticky="nsew")
 
         # self.keystroke_listener = KeystrokeListener(networking=self.networking, ui=self.tab_view.drive_tab)
         # self.listener_thread = threading.Thread(target=self.keystroke_listener.main_thrd)
@@ -93,6 +96,49 @@ class ConnectionFrame(customtkinter.CTkFrame):
         self.statusLabel.grid(row=0, column=0, padx=20)
         self.connectButton.configure(text= "Disconnect" if connected else "Connect")  
         self.connected = connected
+
+class TelemetryFrame(customtkinter.CTkFrame):
+    def __init__(self, master, networking: UnixConnection):
+        super().__init__(master)
+
+        self.grid_rowconfigure(0, weight=1)
+        # self.grid_columnconfigure(0, weight=1)
+
+        self.telemetryLabel = customtkinter.CTkLabel(self, anchor="nw", justify="left", text="No Data")
+        self.telemetryLabel.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.telemetryLabel2 = customtkinter.CTkLabel(self, anchor="nw", justify="left", text="")
+        self.telemetryLabel2.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+
+        networking.addPacketCallback(self.onPacket)
+
+    def onPacket(self, packet):
+        data = json.loads(packet.decode('utf-8'))
+        output, x = parseJsonTree(data, 0, 0)
+
+        cols = output.split("BREAK")
+
+        col2 = ""
+        if len(cols) > 1:
+            col2 = cols[1]
+    
+        self.telemetryLabel.configure(text=cols[0])
+        self.telemetryLabel2.configure(text=col2)
+
+def parseJsonTree(node, indent, lineCount):
+    if len(node) == 0: return "", lineCount
+    out = ""
+    for subkey, value in node.items():
+        if lineCount == 30:
+            out += "BREAK"
+        out += "    " * indent
+        out += subkey + ": "
+        lineCount += 1
+        if isinstance(value, dict):
+            msg, lineCount = parseJsonTree(value, indent + 1, lineCount)
+            out += "\n" + msg
+        else:
+            out += str(value) + "\n"
+    return out, lineCount
 
 class HomeTabView(customtkinter.CTkTabview, ABC):
     def __init__(self, master, network: UnixConnection, **kwargs):

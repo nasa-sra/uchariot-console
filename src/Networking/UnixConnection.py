@@ -1,4 +1,3 @@
-import json
 from time import time 
 import socket
 import select
@@ -8,7 +7,7 @@ import src.UI.ConsoleOutput as ConsoleOutput
 
 class UnixConnection():
     def __init__(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = None
         self.connecting = False
         self.running = True
         self.receiveThread = Thread(target=self.receive)
@@ -16,6 +15,7 @@ class UnixConnection():
         self.lastHeartBeatTime = 0
 
         self.connectCallback = None
+        self.packetCallback = None
 
     def asyncConnect(self, host: str, port: int, callback = None):
         if (not self.connecting):
@@ -25,6 +25,7 @@ class UnixConnection():
 
     def connect(self, host: str, port: int, callback = None):
             ConsoleOutput.log(f"Connecting to {host}:{port}")
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.settimeout(3)
             res = self.sock.connect_ex((host, port))
             self.sock.settimeout(0)
@@ -43,7 +44,6 @@ class UnixConnection():
 
     def receive(self):
         while self.running:
-            
             readable, writable, errors = select.select([self.sock], [], [], 1)
             if len(readable) > 0 and readable[0] is self.sock and self.running:
                 data = self.sock.recv(2**20)
@@ -54,13 +54,16 @@ class UnixConnection():
                         self.connected = True
                         self.connectCallback(True)
 
-                # print(data.decode('utf-8'))
+                if self.packetCallback:
+                    self.packetCallback(data)
                 
-
             if (int(time() * 1000) - self.lastHeartBeatTime > 500 and self.connected):
                 ConsoleOutput.log("Disconnected")
                 self.connected = False
                 self.connectCallback(False)
+    
+    def addPacketCallback(self, callback):
+        self.packetCallback = callback
 
     def verify_connection(self) -> bool:
         if not self.enabled:
@@ -139,7 +142,8 @@ class UnixConnection():
     def close(self):
         ConsoleOutput.log("Closing Connection")
         self.running = False
-        self.sock.close()
+        if self.sock:
+            self.sock.close()
         if self.receiveThread.ident:
             self.receiveThread.join()
                 
