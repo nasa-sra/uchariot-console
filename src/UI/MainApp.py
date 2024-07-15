@@ -8,29 +8,33 @@ from src.Networking.UnixConnection import UnixConnection
 from src.UI.Drive.DriveUI import DriveUI
 # from src.UI.Listener.KeystrokeListener import KeystrokeListener
 from src.UI.Listener.KeystrokeListener import KeystrokeListener
+import src.UI.ConsoleOutput as ConsoleOutput
 
 class App(customtkinter.CTk):
     def __init__(self, **kwargs):
         super().__init__()
 
         self.title('uChariot Driver Station')
-        self.geometry("1200x900")
+        self.geometry("1200x800")
         icon = tk.PhotoImage(file='icon.png')
         self.wm_iconbitmap()
         self.iconphoto(True, icon)
         self.wm_protocol("WM_DELETE_WINDOW", self.close)
 
         self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=3)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=3)
         self.grid_columnconfigure(0, weight=1)
 
         self.networking = UnixConnection()
 
-        self.connectionFrame = ConnectionFrame(self, networking=self.networking, defaultHost="10.93.24.9", defaultPort='8001')
-        self.connectionFrame.grid(row=0, column=0, padx=20, pady=20, sticky="new")
+        self.connectionFrame = ConnectionFrame(self, networking=self.networking, defaultHost="localhost", defaultPort='8001')
+        self.connectionFrame.grid(row=0, column=0, padx=20, pady=(20,0), sticky="new")
+
+
 
         self.tab_view = HomeTabView(master=self, network=self.networking)
-        self.tab_view.grid(row=1, column=0, padx=20, pady=20, sticky="new")
+        self.tab_view.grid(row=2, column=0, padx=20, pady=(10,20), sticky="ew")
 
         # self.keystroke_listener = KeystrokeListener(networking=self.networking, ui=self.tab_view.drive_tab)
         # self.listener_thread = threading.Thread(target=self.keystroke_listener.main_thrd)
@@ -50,6 +54,9 @@ class ConnectionFrame(customtkinter.CTkFrame):
         self.port = tk.StringVar(self, defaultPort)
         self.connected = False
 
+        # self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(5, weight=4)
+
         self.unconnectedStatusLabel = customtkinter.CTkLabel(self, text="Not Connected", text_color='red')
         self.connectedStatusLabel = customtkinter.CTkLabel(self, text="Connected", text_color='green')
         self.loadingBar = customtkinter.CTkProgressBar(self, mode="indeterminate", width=100)
@@ -64,6 +71,9 @@ class ConnectionFrame(customtkinter.CTkFrame):
         self.colonLabel.grid(row=0, column=3, padx=5)
         self.portEntry = customtkinter.CTkEntry(self, placeholder_text="Port", width=50, textvariable=self.port)
         self.portEntry.grid(row=0, column=4, padx=(0, 20), pady=20)
+
+        ConsoleOutput.textbox = customtkinter.CTkTextbox(self, height=100)
+        ConsoleOutput.textbox.grid(row=0, column=5, padx=(0,20), pady=20, sticky="ew")
 
     def onConnect(self):
         if (not self.connected):

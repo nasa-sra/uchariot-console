@@ -1,21 +1,21 @@
 import json
-import time
+from time import time 
 import socket
+import select
 from threading import Thread
 
+import src.UI.ConsoleOutput as ConsoleOutput
 
 class UnixConnection():
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connecting = False
+        self.running = True
+        self.receiveThread = Thread(target=self.receive)
+        self.connected = False
+        self.lastHeartBeatTime = 0
 
-        # self.controller_enabled = False
-        # if not enabled:
-        #     return
-
-        # self.recv_thrd: Thread = Thread(target=self.receive_thrd)
-        # self.recv_thrd.setDaemon(True)
-        # self.recv_thrd.start()
+        self.connectCallback = None
 
     def asyncConnect(self, host: str, port: int, callback = None):
         if (not self.connecting):
@@ -24,39 +24,43 @@ class UnixConnection():
             self.connectThread.start()
 
     def connect(self, host: str, port: int, callback = None):
-            print(f"Connecting to {host}:{port}")
-            self.sock.settimeout(5)
+            ConsoleOutput.log(f"Connecting to {host}:{port}")
+            self.sock.settimeout(3)
             res = self.sock.connect_ex((host, port))
-            self.sock.settimeout(0) # Makes blocking, may want?
+            self.sock.settimeout(0)
 
             if (res == 0):
-                print(f"Connected")
+                ConsoleOutput.log(f"Connected")
+                self.receiveThread.start()
             else:
-                print(f"Failed to connect, Error {res}")
+                ConsoleOutput.log(f"Failed to connect, Error {res}")
 
             self.connecting = False
+            self.connected = res == 0
             if callback:
+                self.connectCallback = callback
                 callback(res == 0)
 
-    def close(self):
-        self.sock.close()
+    def receive(self):
+        while self.running:
+            
+            readable, writable, errors = select.select([self.sock], [], [], 1)
+            if len(readable) > 0 and readable[0] is self.sock and self.running:
+                data = self.sock.recv(2**20)
+
+                if len(data) > 0:
+                    self.lastHeartBeatTime = int(time() * 1000) # ms
+                    if (not self.connected):
+                        self.connected = True
+                        self.connectCallback(True)
+
+                # print(data.decode('utf-8'))
                 
-    def receive_thrd(self):
-        while True:
-            if self.data_tab is None:
-                continue
 
-            # msg = self.sock.recv(2**20)
-            #
-            # print(msg.decode('utf-8'))
-
-            # self.data_tab.configure(state="normal")
-            # self.data_tab.delete("0.0", "end")
-            # self.data_tab.insert("0.0", msg)
-            # self.data_tab.configure(state="disabled")
-            # doc = json.loads(msg)
-            #
-            # print(doc)
+            if (int(time() * 1000) - self.lastHeartBeatTime > 500 and self.connected):
+                ConsoleOutput.log("Disconnected")
+                self.connected = False
+                self.connectCallback(False)
 
     def verify_connection(self) -> bool:
         if not self.enabled:
@@ -132,4 +136,10 @@ class UnixConnection():
 
         self.sock.sendall('{"left_speed": 0, "right_speed": 0};'.encode())
 
-    # def
+    def close(self):
+        ConsoleOutput.log("Closing Connection")
+        self.running = False
+        self.sock.close()
+        if self.receiveThread.ident:
+            self.receiveThread.join()
+                
