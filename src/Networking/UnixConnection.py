@@ -1,30 +1,46 @@
 import json
+import time
 import socket
 from threading import Thread
 
 
 class UnixConnection():
-    def __init__(self, host: str, port: int, enabled: bool):
-        self.HOST = host
-        self.PORT = port
+    def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.enabled = enabled
+        self.connecting = False
 
-        # self.data_tab = None
-
-        self.controller_enabled = False
-        if not enabled:
-            return
-
-        try:
-            self.sock.connect((self.HOST, self.PORT))
-        except ConnectionRefusedError:
-            print("CONNECTION REFUSED")
+        # self.controller_enabled = False
+        # if not enabled:
+        #     return
 
         # self.recv_thrd: Thread = Thread(target=self.receive_thrd)
         # self.recv_thrd.setDaemon(True)
         # self.recv_thrd.start()
 
+    def asyncConnect(self, host: str, port: int, callback = None):
+        if (not self.connecting):
+            self.connecting = True
+            self.connectThread = Thread(target=self.connect, args=(host, port, callback))
+            self.connectThread.start()
+
+    def connect(self, host: str, port: int, callback = None):
+            print(f"Connecting to {host}:{port}")
+            self.sock.settimeout(5)
+            res = self.sock.connect_ex((host, port))
+            self.sock.settimeout(0) # Makes blocking, may want?
+
+            if (res == 0):
+                print(f"Connected")
+            else:
+                print(f"Failed to connect, Error {res}")
+
+            self.connecting = False
+            if callback:
+                callback(res == 0)
+
+    def close(self):
+        self.sock.close()
+                
     def receive_thrd(self):
         while True:
             if self.data_tab is None:
