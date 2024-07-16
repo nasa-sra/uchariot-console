@@ -1,6 +1,7 @@
 from time import time 
 import socket
 import select
+import json
 from threading import Thread
 
 import src.UI.ConsoleOutput as ConsoleOutput
@@ -34,6 +35,7 @@ class UnixConnection():
                 ConsoleOutput.log(f"Connected")
                 self.receiveThread = Thread(target=self.receive)
                 self.receiveThread.start()
+                self.setController('disabled')
             else:
                 ConsoleOutput.log(f"Failed to connect, Error {res}")
 
@@ -66,20 +68,22 @@ class UnixConnection():
     def addPacketCallback(self, callback):
         self.packetCallback = callback
 
-    def verify_connection(self) -> bool:
-        if not self.enabled:
-            return False
-        try:
-            self.sock.sendall("B".encode())
-            return True
-        except:
-            try:
-                self.sock.connect((self.HOST, self.PORT))
-                return True
-            except:
-                print("CONNECTION REFUSED")
-                return False
+    def sendCommand(self, cmdName, data):
+        if self.connected:
+            self.sock.sendall(f'[{cmdName}] {json.dumps(data)};'.encode())
+            # ConsoleOutput.log(f'[{cmdName}] {json.dumps(data)};')
 
+    def setController(self, ctr):
+        if self.connected:
+            data = {"name": ctr}
+            self.sendCommand('set_controller', data)
+            ConsoleOutput.log(f"Setting controller to {ctr}")
+
+    def cmdDrive(self, vel, rot):
+        data = {"velocity": vel, "rotation": rot}
+        self.sendCommand('teleop_drive', data)
+
+    
     # def set_left_speed(self, speed: int):
     #     if not self.verify_connection():
     #         print(f"Failed to send: {{\"left_speed\": {speed}}}")
@@ -112,21 +116,6 @@ class UnixConnection():
 
         print(f'sent msg - [teleop_drive] {{"speed": {speed}, "fwd": {drive_power}, "turn": {turn}}};')
         self.sock.sendall(f'[teleop_drive] {{"speed": {speed}, "fwd": {drive_power}, "turn": {turn}}};'.encode())
-
-    def set_teleop(self):
-        # if not self.verify_connection():
-        #     print("Failed to connect teleop")
-        #     return
-
-        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # try:
-        #     self.sock.connect((self.HOST, self.PORT))
-        # except ConnectionRefusedError:
-        #     print("CONNECTION REFUSED")
-
-        print("sent teleop cmd [set_controller] {{\"name\": \"teleop\"}};")
-        self.sock.sendall(f'[set_controller] {{"name": "teleop"}};'.encode())
-        self.controller_enabled = True
 
     def stop(self):
         # if not self.verify_connection():

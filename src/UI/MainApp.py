@@ -7,9 +7,9 @@ import tkinter as tk
 
 import src.Networking.UnixConnection as UnixConnection
 from src.UI.Drive.DriveUI import DriveUI
-# from src.UI.Listener.KeystrokeListener import KeystrokeListener
-from src.UI.Listener.KeystrokeListener import KeystrokeListener
+import src.UI.Listener.KeystrokeListener as KeystrokeListener
 import src.UI.ConsoleOutput as ConsoleOutput
+from pynput.keyboard import Key
 
 class App(customtkinter.CTk):
     def __init__(self, **kwargs):
@@ -28,7 +28,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
-        self.connectionFrame = ConnectionFrame(self, defaultHost="localhost", defaultPort='8000')
+        self.connectionFrame = ConnectionFrame(self, defaultHost="10.93.24.5", defaultPort='8000')
         self.connectionFrame.grid(row=0, column=0, columnspan=2, padx=20, pady=(20,0), sticky="new")
 
         self.telemetryFrame = TelemetryFrame(self)
@@ -36,14 +36,10 @@ class App(customtkinter.CTk):
 
         self.tab_view = HomeTabView(self)
         self.tab_view.grid(row=1, column=1, padx=20, pady=(10,20), sticky="nsew")
-
-        # self.keystroke_listener = KeystrokeListener(networking=self.networking, ui=self.tab_view.drive_tab)
-        # self.listener_thread = threading.Thread(target=self.keystroke_listener.main_thrd)
-        # self.listener_thread.daemon = True
-        # self.listener_thread.start()
     
     def close(self):
         UnixConnection.networking.close()
+        ConsoleOutput.closing = True
         self.destroy()
 
 class ConnectionFrame(customtkinter.CTkFrame):
@@ -136,13 +132,26 @@ def parseJsonTree(node, indent, lineCount):
         else:
             out += str(value) + "\n"
     return out, lineCount
-
 class HomeTabView(customtkinter.CTkTabview, ABC):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, command=self.onChanged, **kwargs)
 
-        self.add("Drive")
-        self.drive_tab = DriveUI(parent=self)
+        self.add("Disabled")
+        self.add("Teleop")
+        self.add("Pathing")
 
-        # self.add("")
-        # self.add("Remote Management")
+        self.disabledTab = DisabledTabView(self)
+        self.drive_tab = DriveUI(self)
+
+        KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
+
+    def onChanged(self):
+        UnixConnection.networking.setController(self.get().lower())
+
+    def disableCallback(self, state):
+        if state: self.set("Disabled")
+class DisabledTabView:
+    def __init__(self, parent: customtkinter.CTkTabview):
+        self.ID = "Disabled"
+        self.parent = parent
+        p_tab = self.parent.tab(self.ID)
