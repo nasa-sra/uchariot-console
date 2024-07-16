@@ -4,14 +4,12 @@ import time
 import customtkinter
 from datetime import datetime
 
-import src.Networking.UnixConnection as UnixConnection
-import src.UI.ConsoleOutput as ConsoleOutput
+import src.UnixConnection as UnixConnection
+import src.ConsoleOutput as ConsoleOutput
 from pynput.keyboard import Key, KeyCode
-import src.UI.Listener.KeystrokeListener as KeystrokeListener
+import src.KeystrokeListener as KeystrokeListener
 
-GREEN_HOVER = "#005500"
-
-class DriveUI:
+class TeleopUI:
     def __init__(self, parent: customtkinter.CTkTabview):
         self.ID = "Teleop"
         self.parent = parent

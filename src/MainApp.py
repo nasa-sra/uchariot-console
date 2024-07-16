@@ -5,10 +5,10 @@ from abc import ABC
 import customtkinter
 import tkinter as tk
 
-import src.Networking.UnixConnection as UnixConnection
-from src.UI.Drive.DriveUI import DriveUI
-import src.UI.Listener.KeystrokeListener as KeystrokeListener
-import src.UI.ConsoleOutput as ConsoleOutput
+import src.UnixConnection as UnixConnection
+from src.TeleopUI import TeleopUI
+import src.KeystrokeListener as KeystrokeListener
+import src.ConsoleOutput as ConsoleOutput
 from pynput.keyboard import Key
 
 class App(customtkinter.CTk):
@@ -141,7 +141,7 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
         self.add("Pathing")
 
         self.disabledTab = DisabledTabView(self)
-        self.drive_tab = DriveUI(self)
+        self.drive_tab = TeleopUI(self)
 
         KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
 
