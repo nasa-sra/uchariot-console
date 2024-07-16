@@ -2,13 +2,12 @@ from tkinter import DoubleVar, IntVar
 
 import customtkinter
 
-from src.Networking.UnixConnection import UnixConnection
+import src.Networking.UnixConnection as UnixConnection
 
 GREEN_HOVER = "#005500"
 
-
 class DriveUI:
-    def __init__(self, network: UnixConnection, parent: customtkinter.CTkTabview):
+    def __init__(self, parent: customtkinter.CTkTabview):
         self.ID = "Drive"
         self.parent = parent
 
@@ -19,11 +18,9 @@ class DriveUI:
 
         # network.data_tab =
 
-        self.left_tab = customtkinter.CTkTextbox(master=p_tab, state="disabled")
-        self.left_tab.grid(row=0,column=0, sticky="nsew",padx=10,pady=10)
         # network.data_tab = self.left_tab
 
-        self.network_status = NetworkStatus(master=p_tab, network=network)
+        self.network_status = NetworkStatus(master=p_tab)
         self.network_status.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
     def set_speed(self, speed):
@@ -37,14 +34,13 @@ class DriveUI:
 
 
 class NetworkStatus(customtkinter.CTkFrame):
-    def __init__(self, master: any, network: UnixConnection, **kwargs):
+    def __init__(self, master: any, **kwargs):
         super().__init__(master, **kwargs)
-        self.network = network
         self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         # Right Frame -- Controls
-        self.right_frame = self.RightFrame(master=self, network=self.network)
+        self.right_frame = self.RightFrame(self)
         self.right_frame.grid(column=1, row=0, padx=10, pady=10, sticky="nsew")
         self.right_frame.grid_columnconfigure((0, 1, 2), weight=1)
         self.right_frame.grid_rowconfigure((0, 1, 2), weight=1)
@@ -108,19 +104,17 @@ class NetworkStatus(customtkinter.CTkFrame):
     #     self.network.drive_left()
 
     def stop(self):
-        self.network.stop()
+        UnixConnection.network.stop()
 
     class RightFrame(customtkinter.CTkFrame):
-        def __init__(self, master: any, network: UnixConnection, **kwargs):
+        def __init__(self, master: any, **kwargs):
             super().__init__(master, **kwargs)
-
-            self.network = network
 
             self.speed_var: IntVar = IntVar(master=self, name="speed_var")
             self.drive_var: DoubleVar = DoubleVar(master=self, name="left_var")
             self.turn_var: DoubleVar = DoubleVar(master=self, name="right_var")
 
-            self.speed_f = customtkinter.CTkFrame(master=self)
+            self.speed_f = customtkinter.CTkFrame(self)
             self.speed_f.grid(column=0, row=0, padx=5, pady=5, sticky="nsew")
             self.speed_f.grid_rowconfigure((0, 1, 2), weight=1)
             self.speed_f.grid_columnconfigure((0, 1, 2), weight=1)
@@ -197,7 +191,7 @@ class NetworkStatus(customtkinter.CTkFrame):
             self.reconnect_button.grid(column=2, row=1, padx=(5, 25), pady=25, sticky="nsew")
 
         def connect_teleop(self):
-            self.network.set_teleop()
+            UnixConnection.network.set_teleop()
 
         def update_speed_gui(self, speed: int):
             self.speed_slider.set(speed)

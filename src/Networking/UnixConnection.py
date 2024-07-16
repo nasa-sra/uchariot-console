@@ -10,9 +10,9 @@ class UnixConnection():
         self.sock = None
         self.connecting = False
         self.running = True
-        self.receiveThread = Thread(target=self.receive)
         self.connected = False
         self.lastHeartBeatTime = 0
+        self.receiveThread = None
 
         self.connectCallback = None
         self.packetCallback = None
@@ -32,6 +32,7 @@ class UnixConnection():
 
             if (res == 0):
                 ConsoleOutput.log(f"Connected")
+                self.receiveThread = Thread(target=self.receive)
                 self.receiveThread.start()
             else:
                 ConsoleOutput.log(f"Failed to connect, Error {res}")
@@ -144,6 +145,8 @@ class UnixConnection():
         self.running = False
         if self.sock:
             self.sock.close()
-        if self.receiveThread.ident:
+        if self.receiveThread and self.receiveThread.ident:
             self.receiveThread.join()
                 
+
+networking = UnixConnection()

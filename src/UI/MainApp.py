@@ -5,7 +5,7 @@ from abc import ABC
 import customtkinter
 import tkinter as tk
 
-from src.Networking.UnixConnection import UnixConnection
+import src.Networking.UnixConnection as UnixConnection
 from src.UI.Drive.DriveUI import DriveUI
 # from src.UI.Listener.KeystrokeListener import KeystrokeListener
 from src.UI.Listener.KeystrokeListener import KeystrokeListener
@@ -28,15 +28,13 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
-        self.networking = UnixConnection()
-
-        self.connectionFrame = ConnectionFrame(self, networking=self.networking, defaultHost="localhost", defaultPort='8001')
+        self.connectionFrame = ConnectionFrame(self, defaultHost="localhost", defaultPort='8000')
         self.connectionFrame.grid(row=0, column=0, columnspan=2, padx=20, pady=(20,0), sticky="new")
 
-        self.telemetryFrame = TelemetryFrame(self, networking=self.networking)
+        self.telemetryFrame = TelemetryFrame(self)
         self.telemetryFrame.grid(row=1, column=0, padx=(20,0), pady=(30,20), sticky="nsew")
 
-        self.tab_view = HomeTabView(master=self, network=self.networking)
+        self.tab_view = HomeTabView(self)
         self.tab_view.grid(row=1, column=1, padx=20, pady=(10,20), sticky="nsew")
 
         # self.keystroke_listener = KeystrokeListener(networking=self.networking, ui=self.tab_view.drive_tab)
@@ -45,14 +43,13 @@ class App(customtkinter.CTk):
         # self.listener_thread.start()
     
     def close(self):
-        self.networking.close()
+        UnixConnection.networking.close()
         self.destroy()
 
 class ConnectionFrame(customtkinter.CTkFrame):
-    def __init__(self, master, networking: UnixConnection, defaultHost: str, defaultPort: str):
+    def __init__(self, master, defaultHost: str, defaultPort: str):
         super().__init__(master)
 
-        self.networking = networking
         self.host = tk.StringVar(self, defaultHost)
         self.port = tk.StringVar(self, defaultPort)
         self.connected = False
@@ -80,12 +77,12 @@ class ConnectionFrame(customtkinter.CTkFrame):
 
     def onConnect(self):
         if (not self.connected):
-            self.networking.asyncConnect(self.host.get(), int(self.port.get()), self.connectCallback)
+            UnixConnection.networking.asyncConnect(self.host.get(), int(self.port.get()), self.connectCallback)
             self.statusLabel.grid_forget()
             self.loadingBar.grid(row=0, column=0, padx=20)
             self.loadingBar.start()
         else:
-            self.networking.close()
+            UnixConnection.networking.close()
             self.connectCallback(False)
 
     def connectCallback(self, connected):
@@ -98,7 +95,7 @@ class ConnectionFrame(customtkinter.CTkFrame):
         self.connected = connected
 
 class TelemetryFrame(customtkinter.CTkFrame):
-    def __init__(self, master, networking: UnixConnection):
+    def __init__(self, master):
         super().__init__(master)
 
         self.grid_rowconfigure(0, weight=1)
@@ -109,7 +106,7 @@ class TelemetryFrame(customtkinter.CTkFrame):
         self.telemetryLabel2 = customtkinter.CTkLabel(self, anchor="nw", justify="left", text="")
         self.telemetryLabel2.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
 
-        networking.addPacketCallback(self.onPacket)
+        UnixConnection.networking.addPacketCallback(self.onPacket)
 
     def onPacket(self, packet):
         data = json.loads(packet.decode('utf-8'))
@@ -141,11 +138,11 @@ def parseJsonTree(node, indent, lineCount):
     return out, lineCount
 
 class HomeTabView(customtkinter.CTkTabview, ABC):
-    def __init__(self, master, network: UnixConnection, **kwargs):
+    def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
         self.add("Drive")
+        self.drive_tab = DriveUI(parent=self)
 
-        # self.drive_tab = DriveUI(parent=self, network=network)
         # self.add("")
         # self.add("Remote Management")
