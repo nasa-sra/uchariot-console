@@ -5,6 +5,8 @@ from abc import ABC
 import customtkinter
 import tkinter as tk
 
+import pyglet
+
 import src.UnixConnection as UnixConnection
 from src.TeleopUI import TeleopUI
 from src.PathingUI import PathingUI
