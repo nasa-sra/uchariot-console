@@ -44,7 +44,7 @@ class TeleopUI:
         self.cmdVelLabel.configure(text=f"CMD Velocity: {self.vel}\nCMD Rotation: {self.rot}")
     
     def forwardKeyHandler(self, state):
-        self.vel = 2.0 if state else 0.0
+        self.vel = 0.5 if state else 0.0
         self.updateLabel()
     def backwardKeyHandler(self, state):
         self.vel = -2.0 if state else 0.0

@@ -7,6 +7,7 @@ import tkinter as tk
 
 import src.UnixConnection as UnixConnection
 from src.TeleopUI import TeleopUI
+from src.PathingUI import PathingUI
 import src.KeystrokeListener as KeystrokeListener
 import src.ConsoleOutput as ConsoleOutput
 from pynput.keyboard import Key
@@ -142,6 +143,7 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
 
         self.disabledTab = DisabledTabView(self)
         self.drive_tab = TeleopUI(self)
+        self.pathing_tab = PathingUI(self)
 
         KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
 
@@ -150,6 +152,7 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
 
     def disableCallback(self, state):
         if state: self.set("Disabled")
+        UnixConnection.networking.setController('disabled')
 class DisabledTabView:
     def __init__(self, parent: customtkinter.CTkTabview):
         self.ID = "Disabled"

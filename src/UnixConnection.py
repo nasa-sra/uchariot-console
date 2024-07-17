@@ -83,6 +83,12 @@ class UnixConnection():
         data = {"velocity": vel, "rotation": rot}
         self.sendCommand('teleop_drive', data)
 
+    def cmdRunPath(self, path):
+        data = {"name": path}
+        self.sendCommand('run_path', data)
+        ConsoleOutput.log(f"Running path {path}")
+
+
     
     # def set_left_speed(self, speed: int):
     #     if not self.verify_connection():
