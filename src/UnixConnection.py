@@ -88,6 +88,17 @@ class UnixConnection():
         self.sendCommand('run_path', data)
         ConsoleOutput.log(f"Running path {path}")
 
+    def cmdStopPath(self):
+        self.sendCommand('stop_path', {})
+        ConsoleOutput.log(f"Stopping path")
+
+    def cmdResetHeading(self):
+        self.sendCommand('reset_heading', {})
+        ConsoleOutput.log(f"Resetting heading")
+
+    def cmdResetPose(self):
+        self.sendCommand('reset_pose', {})
+        ConsoleOutput.log(f"Resetting pose")
 
     
     # def set_left_speed(self, speed: int):

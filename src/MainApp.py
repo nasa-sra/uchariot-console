@@ -8,11 +8,16 @@ import tkinter as tk
 import pyglet
 
 import src.UnixConnection as UnixConnection
+import src.SSHConnection as SSHConnection
 from src.TeleopUI import TeleopUI
 from src.PathingUI import PathingUI
 import src.KeystrokeListener as KeystrokeListener
 import src.ConsoleOutput as ConsoleOutput
 from pynput.keyboard import Key
+
+import time
+
+PAD = 10
 
 class App(customtkinter.CTk):
     def __init__(self, **kwargs):
@@ -32,13 +37,13 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(1, weight=1)
 
         self.connectionFrame = ConnectionFrame(self, defaultHost="10.93.24.5", defaultPort='8000')
-        self.connectionFrame.grid(row=0, column=0, columnspan=2, padx=20, pady=(20,0), sticky="new")
+        self.connectionFrame.grid(row=0, column=0, columnspan=2, padx=PAD, pady=(20,0), sticky="new")
 
         self.telemetryFrame = TelemetryFrame(self)
         self.telemetryFrame.grid(row=1, column=0, padx=(20,0), pady=(30,20), sticky="nsew")
 
         self.tab_view = HomeTabView(self)
-        self.tab_view.grid(row=1, column=1, padx=20, pady=(10,20), sticky="nsew")
+        self.tab_view.grid(row=1, column=1, padx=PAD, pady=(10,20), sticky="nsew")
     
     def close(self):
         UnixConnection.networking.close()
@@ -49,54 +54,89 @@ class ConnectionFrame(customtkinter.CTkFrame):
     def __init__(self, master, defaultHost: str, defaultPort: str):
         super().__init__(master)
 
+        BOLD = customtkinter.CTkFont(weight='bold')
+
         self.host = tk.StringVar(self, defaultHost)
         self.port = tk.StringVar(self, defaultPort)
         self.connected = False
 
         # self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(5, weight=4)
+        self.grid_columnconfigure(6, weight=4)
 
-        self.unconnectedStatusLabel = customtkinter.CTkLabel(self, text="Not Connected", text_color='red')
-        self.connectedStatusLabel = customtkinter.CTkLabel(self, text="Connected", text_color='green')
-        self.loadingBar = customtkinter.CTkProgressBar(self, mode="indeterminate", width=100)
+        ctrlFrame = customtkinter.CTkFrame(self, fg_color='transparent')
+        ctrlFrame.grid(row=0, column=0, pady=0, padx=(0, 2 * PAD))
+
+        self.unconnectedStatusLabel = customtkinter.CTkLabel(ctrlFrame, text="Not Connected", text_color='red')
+        self.connectedStatusLabel = customtkinter.CTkLabel(ctrlFrame, text="Connected", text_color='green')
+        self.loadingBar = customtkinter.CTkProgressBar(ctrlFrame, mode="indeterminate", width=100)
 
         self.statusLabel = self.unconnectedStatusLabel
-        self.statusLabel.grid(row=0, column=0, padx=20)
+        self.statusLabel.grid(row=0, column=0, padx=PAD)
 
-        self.connectButton = customtkinter.CTkButton(self, text='Connect', width=100, height=40, command=self.onConnect, font=customtkinter.CTkFont(weight='bold'))
-        self.connectButton.grid(row=0, column=1, padx=(0, 20), pady=20)
+        self.connectButton = customtkinter.CTkButton(ctrlFrame, text='Connect', width=100, command=self.onConnect, font=BOLD, height=40)
+        self.connectButton.grid(row=1, column=0, padx=PAD, pady=(0, 2 * PAD))
 
-        self.hostEntry = customtkinter.CTkEntry(self, placeholder_text="Host", width=100, textvariable=self.host)
-        self.hostEntry.grid(row=0, column=2, padx=0, pady=20)
+        ipFrame = customtkinter.CTkFrame(ctrlFrame, fg_color='transparent')
+        ipFrame.grid(row=0, column=1, padx=(PAD + 5, PAD), pady=PAD)
 
-        self.colonLabel = customtkinter.CTkLabel(self, text=":")
+        self.hostEntry = customtkinter.CTkEntry(ipFrame, placeholder_text="Host", width=100, textvariable=self.host)
+        self.hostEntry.grid(row=0, column=2, padx=0, pady=PAD)
+
+        self.colonLabel = customtkinter.CTkLabel(ipFrame, text=":")
         self.colonLabel.grid(row=0, column=3, padx=5)
 
-        self.portEntry = customtkinter.CTkEntry(self, placeholder_text="Port", width=50, textvariable=self.port)
-        self.portEntry.grid(row=0, column=4, padx=(0, 20), pady=20)
+        self.portEntry = customtkinter.CTkEntry(ipFrame, placeholder_text="Port", width=50, textvariable=self.port)
+        self.portEntry.grid(row=0, column=4, padx=(0, PAD), pady=PAD)
 
-        self.resetButton = customtkinter.CTkButton(self, text='Connect', width=100, height=40, command=self.onConnect, font=customtkinter.CTkFont(weight='bold'))
-        self.reset
+        stFrame = customtkinter.CTkFrame(ctrlFrame, fg_color='transparent')
+        stFrame.grid(row=1, column=1, padx=(PAD-5, PAD), pady=PAD) 
+
+        self.startButton = customtkinter.CTkButton(stFrame, text="Start", font=BOLD, width=70, height=40, command=self.onStart, fg_color='green', hover_color='darkgreen')
+        self.startButton.grid(row=0, column=0, padx=PAD, pady=(0, 2* PAD))
+
+        self.stopButton = customtkinter.CTkButton(stFrame, text="Stop", font=BOLD, width=70, height=40, command=self.onStop, fg_color='red', hover_color='darkred')
+        self.stopButton.grid(row=0, column=1, padx=PAD, pady=(0, 2* PAD))
 
         ConsoleOutput.textbox = customtkinter.CTkTextbox(self, height=100)
-        ConsoleOutput.textbox.grid(row=0, column=5, padx=(0,20), pady=20, sticky="ew")
+        ConsoleOutput.textbox.grid(row=0, column=6, padx=(0,20), pady=PAD, sticky="ew")
+
+        KeystrokeListener.listener.addCallback(Key.space, self.onStopKB)
 
     def onConnect(self):
         if (not self.connected):
             UnixConnection.networking.asyncConnect(self.host.get(), int(self.port.get()), self.connectCallback)
             self.statusLabel.grid_forget()
-            self.loadingBar.grid(row=0, column=0, padx=20)
+            self.loadingBar.grid(row=0, column=0, padx=PAD)
             self.loadingBar.start()
         else:
             UnixConnection.networking.close()
             self.connectCallback(False)
+
+    def onStart(self):
+        def onStartThread(host):
+            SSHConnection.conn.connect(host)
+            SSHConnection.conn.send_cmd("sh /home/uchariot/uchariot-base/start.sh")
+            SSHConnection.conn.close()
+        t = threading.Thread(target=onStartThread, args=(self.host.get(), ))
+        t.start()
+
+    def onStop(self):
+        def onStopThread(host):
+            SSHConnection.conn.connect(host)
+            SSHConnection.conn.send_cmd("sh /home/uchariot/uchariot-base/stop.sh")
+            SSHConnection.conn.close()
+        t = threading.Thread(target=onStopThread, args=(self.host.get(), ))
+        t.start()
+
+    def onStopKB(self, _):
+        self.onStop() 
 
     def connectCallback(self, connected):
         self.statusLabel.grid_forget()
         self.statusLabel = self.connectedStatusLabel if connected else self.unconnectedStatusLabel
         self.loadingBar.stop()
         self.loadingBar.grid_forget()
-        self.statusLabel.grid(row=0, column=0, padx=20)
+        self.statusLabel.grid(row=0, column=0, padx=PAD)
         self.connectButton.configure(text= "Disconnect" if connected else "Connect")  
         self.connected = connected
 
@@ -108,9 +148,9 @@ class TelemetryFrame(customtkinter.CTkFrame):
         # self.grid_columnconfigure(0, weight=1)
 
         self.telemetryLabel = customtkinter.CTkLabel(self, anchor="nw", justify="left", text="No Data")
-        self.telemetryLabel.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.telemetryLabel.grid(row=0, column=0, padx=PAD, pady=PAD, sticky="nsew")
         self.telemetryLabel2 = customtkinter.CTkLabel(self, anchor="nw", justify="left", text="")
-        self.telemetryLabel2.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+        self.telemetryLabel2.grid(row=0, column=1, padx=PAD, pady=PAD, sticky="nsew")
 
         UnixConnection.networking.addPacketCallback(self.onPacket)
 
@@ -142,9 +182,10 @@ def parseJsonTree(node, indent, lineCount):
         else:
             out += str(value) + "\n"
     return out, lineCount
+
 class HomeTabView(customtkinter.CTkTabview, ABC):
     def __init__(self, master, **kwargs):
-        super().__init__(master, command=self.onChanged, **kwargs)
+        super().__init__(master, command=self.onChanged, **kwargs, width=420)
 
         self.add("Disabled")
         self.add("Teleop")
@@ -162,6 +203,7 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
     def disableCallback(self, state):
         if state: self.set("Disabled")
         UnixConnection.networking.setController('disabled')
+
 class DisabledTabView:
     def __init__(self, parent: customtkinter.CTkTabview):
         self.ID = "Disabled"

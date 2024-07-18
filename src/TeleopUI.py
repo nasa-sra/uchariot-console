@@ -31,8 +31,6 @@ class TeleopUI:
         self.controllerManager = pyglet.input.ControllerManager()
         controllers = self.controllerManager.get_controllers()
 
-        
-
         self.controller = None
         if controllers:
             self.controller = controllers[0]
