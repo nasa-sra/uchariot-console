@@ -62,14 +62,21 @@ class ConnectionFrame(customtkinter.CTkFrame):
 
         self.statusLabel = self.unconnectedStatusLabel
         self.statusLabel.grid(row=0, column=0, padx=20)
+
         self.connectButton = customtkinter.CTkButton(self, text='Connect', width=100, height=40, command=self.onConnect, font=customtkinter.CTkFont(weight='bold'))
         self.connectButton.grid(row=0, column=1, padx=(0, 20), pady=20)
+
         self.hostEntry = customtkinter.CTkEntry(self, placeholder_text="Host", width=100, textvariable=self.host)
         self.hostEntry.grid(row=0, column=2, padx=0, pady=20)
+
         self.colonLabel = customtkinter.CTkLabel(self, text=":")
         self.colonLabel.grid(row=0, column=3, padx=5)
+
         self.portEntry = customtkinter.CTkEntry(self, placeholder_text="Port", width=50, textvariable=self.port)
         self.portEntry.grid(row=0, column=4, padx=(0, 20), pady=20)
+
+        self.resetButton = customtkinter.CTkButton(self, text='Connect', width=100, height=40, command=self.onConnect, font=customtkinter.CTkFont(weight='bold'))
+        self.reset
 
         ConsoleOutput.textbox = customtkinter.CTkTextbox(self, height=100)
         ConsoleOutput.textbox.grid(row=0, column=5, padx=(0,20), pady=20, sticky="ew")
