@@ -4,7 +4,7 @@ import select
 import json
 from threading import Thread
 
-import src.ConsoleOutput as ConsoleOutput
+import src.UI.ConsoleOutput as ConsoleOutput
 
 class UnixConnection():
     def __init__(self):

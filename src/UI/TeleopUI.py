@@ -5,8 +5,8 @@ import customtkinter
 import pyglet
 from datetime import datetime
 
-import src.UnixConnection as UnixConnection
-import src.ConsoleOutput as ConsoleOutput
+import src.Networking.UnixConnection as UnixConnection
+import src.UI.ConsoleOutput as ConsoleOutput
 from pynput.keyboard import Key, KeyCode
 import src.KeystrokeListener as KeystrokeListener
 from enum import Enum
