@@ -1,3 +1,4 @@
+import os
 import paramiko
 
 import src.UI.ConsoleOutput as ConsoleOutput
@@ -22,7 +23,7 @@ class SSHConnection:
         self.client.connect(
             host, username=USERNAME, password=PASSWORD, banner_timeout=1
         )
-        self.sftp = paramiko.SFTPClient.from_transport(self.client.get_transport())
+        # self.sftp = paramiko.SFTPClient.from_transport(self.client.get_transport())
 
     def send_cmd(self, cmd):
         ConsoleOutput.log(f"(ssh) {USERNAME}@{self.host}:~$ {cmd}")
@@ -33,7 +34,12 @@ class SSHConnection:
         # ConsoleOutput.log(f'{output}')
 
     def send_path(self, filePath):
-        self.sftp.put(filePath, f"/home/uchariot/uchariot-base/build/paths/")
+        self.sftp = self.client.open_sftp()
+        self.sftp.put(
+            filePath,
+            f"/home/uchariot/uchariot-base/build/paths/{os.path.basename(filePath)}",
+        )
+        self.sftp.close()
 
     def close(self):
         self.sftp.close()

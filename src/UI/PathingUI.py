@@ -114,18 +114,21 @@ class PathingUI:
     def deployPath(self):
         if self.nPath.get() == "INVALID":
             return
-
-        fname, fextension = os.path.splitext(self.nPath.get())
-
-        if fextension != ".kml" and fextension != ".xml":
-            return
-
+        SSHConnection.conn.connect("10.93.24.5")
         SSHConnection.conn.send_path(self.nPath.get())
+        SSHConnection.conn.close()
+
+        self.nPath.set("")
         pass
 
     def onResetOdom(self):
         UnixConnection.networking.cmdResetPose()
         pass
+
+        fname, fextension = os.path.splitext(self.nPath.get())
+
+        if fextension != ".kml" and fextension != ".xml":
+            return
 
     def onResetGyro(self):
         UnixConnection.networking.cmdResetHeading()
