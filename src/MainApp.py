@@ -190,10 +190,12 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
         self.add("Disabled")
         self.add("Teleop")
         self.add("Pathing")
+        self.add("Following")
 
         self.disabledTab = DisabledTabView(self)
         self.drive_tab = TeleopUI(self)
         self.pathing_tab = PathingUI(self)
+        self.following_tab = FollowingUI(self)
 
         KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
 
@@ -207,5 +209,14 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
 class DisabledTabView:
     def __init__(self, parent: customtkinter.CTkTabview):
         self.ID = "Disabled"
+        self.parent = parent
+        p_tab = self.parent.tab(self.ID)
+
+        self.configBtn = customtkinter.CTkButton(master=p_tab, text="Load Config", command=UnixConnection.networking.loadConfig)
+        self.configBtn.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="n")
+
+class FollowingUI:
+    def __init__(self, parent: customtkinter.CTkTabview):
+        self.ID = "Following"
         self.parent = parent
         p_tab = self.parent.tab(self.ID)

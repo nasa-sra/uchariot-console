@@ -100,6 +100,10 @@ class UnixConnection():
         self.sendCommand('reset_pose', {})
         ConsoleOutput.log(f"Resetting pose")
 
+    def loadConfig(self):
+        self.sendCommand('load_config', {})
+        ConsoleOutput.log(f"Loading config")
+
     
     # def set_left_speed(self, speed: int):
     #     if not self.verify_connection():
