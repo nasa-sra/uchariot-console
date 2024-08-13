@@ -38,7 +38,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(1, weight=1)
 
         self.connectionFrame = ConnectionFrame(
-            self, defaultHost="10.93.24.5", defaultPort="8000"
+            self, defaultHost="192.168.1.5", defaultPort="8000"
         )
         self.connectionFrame.grid(
             row=0, column=0, columnspan=2, padx=PAD, pady=(20, 0), sticky="nsew"
@@ -218,17 +218,23 @@ class TelemetryFrame(customtkinter.CTkFrame):
         UnixConnection.networking.addPacketCallback(self.onPacket)
 
     def onPacket(self, packet):
-        data = json.loads(packet.decode("utf-8"))
-        output, x = parseJsonTree(data, 0, 0)
+        packets = packet.decode("utf-8")
+        lastPacketPos = packets.rfind('{"robot":')
+        try:
+            data = json.loads(packets[lastPacketPos:])
 
-        cols = output.split("BREAK")
+            output, x = parseJsonTree(data, 0, 0)
+            cols = output.split("BREAK")
 
-        col2 = ""
-        if len(cols) > 1:
-            col2 = cols[1]
+            col2 = ""
+            if len(cols) > 1:
+                col2 = cols[1]
 
-        self.telemetryLabel.configure(text=cols[0])
-        self.telemetryLabel2.configure(text=col2)
+            self.telemetryLabel.configure(text=cols[0])
+            self.telemetryLabel2.configure(text=col2)
+
+        except:
+            print(f'Bad Packet: {packets}')
 
 
 def parseJsonTree(node, indent, lineCount):
@@ -236,7 +242,7 @@ def parseJsonTree(node, indent, lineCount):
         return "", lineCount
     out = ""
     for subkey, value in node.items():
-        if lineCount == 30:
+        if lineCount == 35:
             out += "BREAK"
         out += "    " * indent
         out += subkey + ": "
