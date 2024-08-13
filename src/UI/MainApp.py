@@ -263,11 +263,13 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
         self.add("Teleop")
         self.add("Pathing")
         self.add("Following")
+        self.add("Summon")
 
         self.disabledTab = DisabledTabView(self)
         self.drive_tab = TeleopUI(self)
         self.pathing_tab = PathingUI(self)
         self.following_tab = FollowingUI(self)
+        self.summon_tab = SummonUI(self)
 
         KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
 
@@ -294,3 +296,28 @@ class FollowingUI:
         self.ID = "Following"
         self.parent = parent
         p_tab = self.parent.tab(self.ID)
+
+class SummonUI:
+    def __init__(self, parent: customtkinter.CTkTabview):
+        self.ID = "Summon"
+        self.parent = parent
+        p_tab = self.parent.tab(self.ID)
+
+        self.targetLat = tk.DoubleVar(p_tab, 0.0)
+        self.targetLon = tk.DoubleVar(p_tab, 0.0)
+
+        self.latLabel = customtkinter.CTkLabel(master=p_tab, text="Target Latitude: ")
+        self.latLabel.grid(row=0, column=0, sticky="nsew", padx=PAD)
+        self.latEntry = customtkinter.CTkEntry( master=p_tab, width=150, textvariable=self.targetLat)
+        self.latEntry.grid(row=0, column=1, sticky="nw", padx=(0, PAD), pady=PAD)
+
+        self.lonLabel = customtkinter.CTkLabel(master=p_tab, text="Target Longitude: ")
+        self.lonLabel.grid(row=1, column=0, sticky="nsew", padx=PAD)
+        self.lonEntry = customtkinter.CTkEntry( master=p_tab, width=150, textvariable=self.targetLon)
+        self.lonEntry.grid(row=1, column=1, sticky="nw", padx=(0, PAD), pady=PAD)
+
+        self.summonBtn = customtkinter.CTkButton(master=p_tab, text="Summon", command=self.onSummon)
+        self.summonBtn.grid(row=3, column=0, padx=PAD, pady=PAD, sticky="nw")
+
+    def onSummon(self):
+        UnixConnection.networking.summon(self.targetLat.get(), self.targetLon.get())

@@ -104,51 +104,10 @@ class UnixConnection():
         self.sendCommand('load_config', {})
         ConsoleOutput.log(f"Loading config")
 
-    
-    # def set_left_speed(self, speed: int):
-    #     if not self.verify_connection():
-    #         print(f"Failed to send: {{\"left_speed\": {speed}}}")
-    #         return
-    #
-    #     print(f'sent msg_l - {{"left_speed": {speed}}}')
-    #     self.sock.send(f'{{"left_speed": {speed}}}'.encode())
-    #
-    # def set_right_speed(self, speed: int):
-    #     if not self.verify_connection():
-    #         print(f"Failed to send: {{\"right_speed\": {speed}}}")
-    #         return
-    #
-    #     print(f'sent msg_r - {{right_speed: {speed}}}')
-    #     self.sock.send(f'{{"right_speed": {speed}}}'.encode())
-
-    def set_speed(self, speed: int, drive_power: float, turn: float):
-        if not self.controller_enabled:
-            return
-
-        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # try:
-        #     self.sock.connect((self.HOST, self.PORT))
-        # except ConnectionRefusedError:
-        #     print("CONNECTION REFUSED")
-
-        # if not self.verify_connection():
-        #     print(f"Failed to send: {{\"left_speed\": {l_speed}, \"right_speed\": {r_speed}}}")
-        #     return
-
-        print(f'sent msg - [teleop_drive] {{"speed": {speed}, "fwd": {drive_power}, "turn": {turn}}};')
-        self.sock.sendall(f'[teleop_drive] {{"speed": {speed}, "fwd": {drive_power}, "turn": {turn}}};'.encode())
-
-    def stop(self):
-        # if not self.verify_connection():
-        #     return
-
-        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # try:
-        #     self.sock.connect((self.HOST, self.PORT))
-        # except ConnectionRefusedError:
-        #     print("CONNECTION REFUSED")
-
-        self.sock.sendall('{"left_speed": 0, "right_speed": 0};'.encode())
+    def summon(self, lat, lon):
+        data = {"latitude": lat, "longitude": lon}
+        self.sendCommand('summon', data)
+        ConsoleOutput.log(f"Summoning to {lat}, {lon}")
 
     def close(self):
         ConsoleOutput.log("Closing Connection")
