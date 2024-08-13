@@ -73,6 +73,14 @@ class UnixConnection():
             self.sock.sendall(f'[{cmdName}] {json.dumps(data)};'.encode())
             # ConsoleOutput.log(f'[{cmdName}] {json.dumps(data)};')
 
+    def enable(self):
+        self.sendCommand('enable', {})
+        ConsoleOutput.log(f"Enabling")
+    
+    def disable(self):
+        self.sendCommand('disable', {})
+        ConsoleOutput.log(f"Disabling")
+
     def setController(self, ctr):
         if self.connected:
             data = {"name": ctr}

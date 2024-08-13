@@ -37,17 +37,19 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
-        self.connectionFrame = ConnectionFrame(
-            self, defaultHost="192.168.1.5", defaultPort="8000"
-        )
-        self.connectionFrame.grid(
-            row=0, column=0, columnspan=2, padx=PAD, pady=(20, 0), sticky="nsew"
-        )
+        self.connectionFrame = ConnectionFrame( self, defaultHost="192.168.1.5", defaultPort="8000" )
+        self.connectionFrame.grid( row=0, column=0, columnspan=2, padx=PAD, pady=(20, 0), sticky="nsew" )
 
-        self.telemetryFrame = TelemetryFrame(self)
-        self.telemetryFrame.grid(
-            row=1, column=0, padx=(20, 0), pady=(30, 20), sticky="nsew"
-        )
+        self.leftColumnFrame = customtkinter.CTkFrame(self, fg_color="transparent")
+        self.leftColumnFrame.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="nsew" )
+        self.leftColumnFrame.grid_rowconfigure(1, weight=1)
+        self.leftColumnFrame.grid_columnconfigure(0, weight=1)
+
+        self.enableFrame = EnableFrame(self.leftColumnFrame, fg_color="transparent")
+        self.enableFrame.grid(row=0, column=0, padx=PAD, pady=PAD)
+
+        self.telemetryFrame = TelemetryFrame(self.leftColumnFrame)
+        self.telemetryFrame.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="nsew" )
 
         self.tab_view = HomeTabView(self)
         self.tab_view.grid(row=1, column=1, padx=PAD, pady=(10, 20), sticky="nsew")
@@ -125,7 +127,7 @@ class ConnectionFrame(customtkinter.CTkFrame):
 
         self.startButton = customtkinter.CTkButton(
             stFrame,
-            text="Start",
+            text="Start Code",
             font=BOLD,
             width=70,
             height=40,
@@ -137,7 +139,7 @@ class ConnectionFrame(customtkinter.CTkFrame):
 
         self.stopButton = customtkinter.CTkButton(
             stFrame,
-            text="Stop",
+            text="Stop Code",
             font=BOLD,
             width=70,
             height=40,
@@ -153,6 +155,7 @@ class ConnectionFrame(customtkinter.CTkFrame):
         )
 
         KeystrokeListener.listener.addCallback(Key.space, self.onStopKB)
+        KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
 
     def onConnect(self):
         if not self.connected:
@@ -187,6 +190,10 @@ class ConnectionFrame(customtkinter.CTkFrame):
     def onStopKB(self, _):
         self.onStop()
 
+    def disableCallback(self, state):
+        if state:
+            UnixConnection.networking.disable()
+
     def connectCallback(self, connected):
         self.statusLabel.grid_forget()
         self.statusLabel = (
@@ -198,7 +205,44 @@ class ConnectionFrame(customtkinter.CTkFrame):
         self.connectButton.configure(text="Disconnect" if connected else "Connect")
         self.connected = connected
 
+class EnableFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
 
+        BOLD = customtkinter.CTkFont(weight="bold")
+
+        self.grid_rowconfigure(0, weight=1)
+        # self.grid_columnconfigure(0, weight=1)
+
+        self.enableBtn = customtkinter.CTkButton(
+            master=self,
+            text="Enable",
+            font=BOLD,
+            width=150,
+            height=40,
+            command=self.onEnable,
+            fg_color="green",
+            hover_color="darkgreen",
+        )
+        self.enableBtn.grid(row=0, column=0, sticky="ew", padx=PAD, pady=0)
+
+        self.disableBtn = customtkinter.CTkButton(
+            master=self,
+            text="Disable",
+            font=BOLD,
+            width=150,
+            height=40,
+            command=self.onDisable,
+            fg_color="red",
+            hover_color="darkred",
+        )
+        self.disableBtn.grid(row=0, column=1, sticky="ew", padx=PAD, pady=0)
+
+    def onEnable(self):
+        UnixConnection.networking.enable()
+
+    def onDisable(self):
+        UnixConnection.networking.disable()
 class TelemetryFrame(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
@@ -271,16 +315,8 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
         self.following_tab = FollowingUI(self)
         self.summon_tab = SummonUI(self)
 
-        KeystrokeListener.listener.addCallback(Key.enter, self.disableCallback)
-
     def onChanged(self):
         UnixConnection.networking.setController(self.get().lower())
-
-    def disableCallback(self, state):
-        if state:
-            self.set("Disabled")
-        UnixConnection.networking.setController("disabled")
-
 
 class DisabledTabView:
     def __init__(self, parent: customtkinter.CTkTabview):
