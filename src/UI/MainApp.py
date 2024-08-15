@@ -286,7 +286,7 @@ def parseJsonTree(node, indent, lineCount):
         return "", lineCount
     out = ""
     for subkey, value in node.items():
-        if lineCount == 35:
+        if lineCount == 45:
             out += "BREAK"
         out += "    " * indent
         out += subkey + ": "
@@ -339,8 +339,8 @@ class SummonUI:
         self.parent = parent
         p_tab = self.parent.tab(self.ID)
 
-        self.targetLat = tk.DoubleVar(p_tab, 0.0)
-        self.targetLon = tk.DoubleVar(p_tab, 0.0)
+        self.targetLat = tk.StringVar(p_tab, "0.0")
+        self.targetLon = tk.StringVar(p_tab, "0.0")
 
         self.latLabel = customtkinter.CTkLabel(master=p_tab, text="Target Latitude: ")
         self.latLabel.grid(row=0, column=0, sticky="nsew", padx=PAD)
