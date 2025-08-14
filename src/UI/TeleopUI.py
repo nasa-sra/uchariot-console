@@ -62,6 +62,7 @@ class TeleopUI:
         # Start the command thread
         self.cmdThread = threading.Thread(target=self.command, daemon=True)
         self.cmdThread.start()
+
     def command(self):
         while True:
             if self.controller and self.ctrlMode != CtrlMode.KEYBOARD:
@@ -80,6 +81,7 @@ class TeleopUI:
             if ConsoleOutput.closing:
                 break
             time.sleep(0.02)
+
     def toggleCtrlMode(self):
         if self.ctrlMode == CtrlMode.ONE_STICK:
             self.ctrlMode = CtrlMode.TWO_STICK
@@ -88,21 +90,26 @@ class TeleopUI:
         else:
             self.ctrlMode = CtrlMode.ONE_STICK
         self.ctrlModeBtn.configure(text=self.ctrlMode.value)
+
     def updateLabel(self):
         self.cmdVelValue.configure(text=f"{self.vel:.2f}")
         self.cmdRotValue.configure(text=f"{self.rot:.2f}")
+
     def forwardKeyHandler(self, state):
         if not self.ctrlMode == CtrlMode.KEYBOARD: return
         self.vel = 0.5 if state else 0.0
         self.updateLabel()
+
     def backwardKeyHandler(self, state):
         if not self.ctrlMode == CtrlMode.KEYBOARD: return
         self.vel = -2.0 if state else 0.0
         self.updateLabel()
+
     def leftKeyHandler(self, state):
         if not self.ctrlMode == CtrlMode.KEYBOARD: return
         self.rot = -1.0 if state else 0.0
         self.updateLabel()
+        
     def rightKeyHandler(self, state):
         if not self.ctrlMode == CtrlMode.KEYBOARD: return
         self.rot = 1.0 if state else 0.0
