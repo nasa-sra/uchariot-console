@@ -37,7 +37,7 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
-        self.connectionFrame = ConnectionFrame( self, defaultHost="192.168.1.5", defaultPort="8000" )
+        self.connectionFrame = ConnectionFrame( self, defaultHost="10.11.11.2", defaultPort="8000" )
         self.connectionFrame.grid( row=0, column=0, columnspan=2, padx=PAD, pady=(20, 0), sticky="nsew" )
 
         self.leftColumnFrame = customtkinter.CTkFrame(self, fg_color="transparent")
@@ -210,9 +210,7 @@ class EnableFrame(customtkinter.CTkFrame):
         super().__init__(master, **kwargs)
 
         BOLD = customtkinter.CTkFont(weight="bold")
-
-        self.grid_rowconfigure(0, weight=1)
-        # self.grid_columnconfigure(0, weight=1)
+        self.master = master  
 
         self.enableBtn = customtkinter.CTkButton(
             master=self,
@@ -239,10 +237,16 @@ class EnableFrame(customtkinter.CTkFrame):
         self.disableBtn.grid(row=0, column=1, sticky="ew", padx=PAD, pady=0)
 
     def onEnable(self):
-        UnixConnection.networking.enable()
+        # Go to Teleop tab in HomeTabView
+        UnixConnection.networking.setController("teleop")
+        self.master.master.tab_view.set("Teleop")
 
     def onDisable(self):
-        UnixConnection.networking.disable()
+        # Go to Disabled tab in HomeTabView
+        UnixConnection.networking.setController("disabled")
+        self.master.master.tab_view.set("Disabled")
+
+        
 class TelemetryFrame(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
@@ -325,7 +329,7 @@ class DisabledTabView:
         p_tab = self.parent.tab(self.ID)
 
         self.configBtn = customtkinter.CTkButton(master=p_tab, text="Load Config", command=UnixConnection.networking.loadConfig)
-        self.configBtn.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="n")
+        self.configBtn.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="n")    
 
 class FollowingUI:
     def __init__(self, parent: customtkinter.CTkTabview):
