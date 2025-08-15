@@ -1,11 +1,20 @@
 # UChariot Console
 A GUI driver console for microchariot
 
+## Instructions on how to make a portable USB
+* Clone the repo from GitHub
+* Download the portable installation of Python here: https://github.com/winpython/winpython/releases/download/4.6.20220116/Winpython64-3.9.10.0.exe (Python 3.9 is verified to work)
+* Place the file in a folder named "portable_python" in the uchariot-console repo
+* Move the entire folder to the USB drive
+* Open the portable installation of Python so it can extract the necessary files
+* Run the install.bat file in File Explorer to download the dependencies of the project
+* Finally you can run the run.bat on any computer
+
 ## Running
 After cloning the repo, install the dependencies with
-`pip install customtkinter pyglet pynput`  
+`python -m pip install -r requirements.txt` 
 Then start the console with
-`python main.py`  
+`python main.py`
 > For some laptops, using controller may not be supported. If you get errors about joysticks or the console app doesn't respond, try commenting out lines 32-37 in TeleopUI.py
 
 ## Usage
@@ -38,4 +47,3 @@ This is used to follow a target, like a person.
 This is used to summon the robot to a person.
 * Target latitude/longitude - Input the target's approximate GPS location.
 * Summon - Command the robot to move to the target.
-

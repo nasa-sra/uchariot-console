@@ -1,4 +1,6 @@
 customtkinter
+paramiko
+pygame
 pyglet
 pynput
 
