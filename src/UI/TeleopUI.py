@@ -29,7 +29,7 @@ class TeleopUI:
 
         if pygame.joystick.get_count() > 0:
             self.controller = pygame.joystick.Joystick(0)
-            self.controller.init()
+            # self.controller.init()
         self.controllerLabel = customtkinter.CTkLabel(
             p_tab,
             text="Controller Connected" if self.controller else "Controller Disconnected",
