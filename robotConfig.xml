@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<robot>
+    <override stoppingDistance="1.0"></override>
+    <pathing velocityKp="1.0" headingKp="-0.5" obstacleAvoidance="true" avoidanceGain="0.5" obstacleConfThresh="0.5" obstacleSizeThresh="0.4"></pathing>
+    <following targetName="person" maxFollowDistance="6.0" minFollowDistance="2.0" distanceFilterAlpha="0.5" driveVelocity="0.5" headingKp="1.0"></following>
+    <summon driveVelocity="1.0" velocityKp="0.5" headingKp="-0.5" transitionDistance="3.0" stopDistance="1.5" targetName="person"></summon>
+</robot>

@@ -14,6 +14,7 @@ from src.UI.PathingUI import PathingUI
 import src.KeystrokeListener as KeystrokeListener
 import src.UI.ConsoleOutput as ConsoleOutput
 from pynput.keyboard import Key
+import sys
 
 import time
 
@@ -58,6 +59,7 @@ class App(customtkinter.CTk):
         UnixConnection.networking.close()
         ConsoleOutput.closing = True
         self.destroy()
+        sys.exit(0)
 
 
 class ConnectionFrame(customtkinter.CTkFrame):
@@ -239,11 +241,13 @@ class EnableFrame(customtkinter.CTkFrame):
     def onEnable(self):
         # Go to Teleop tab in HomeTabView
         UnixConnection.networking.setController("teleop")
+        UnixConnection.networking.enable()
         self.master.master.tab_view.set("Teleop")
 
     def onDisable(self):
         # Go to Disabled tab in HomeTabView
         UnixConnection.networking.setController("disabled")
+        UnixConnection.networking.disable()
         self.master.master.tab_view.set("Disabled")
 
         
@@ -320,6 +324,8 @@ class HomeTabView(customtkinter.CTkTabview, ABC):
         self.summon_tab = SummonUI(self)
 
     def onChanged(self):
+        if(self.get() == "Disabled"):
+            UnixConnection.networking.disable()
         UnixConnection.networking.setController(self.get().lower())
 
 class DisabledTabView:
