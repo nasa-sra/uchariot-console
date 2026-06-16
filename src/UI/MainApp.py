@@ -296,6 +296,8 @@ class TelemetryFrame(customtkinter.CTkFrame):
 
         except (json.JSONDecodeError, ValueError, KeyError) as e:
             print(f'Bad Packet ({e}): {packets}')
+        except Exception as e:
+            print(f'Unexpected error processing packet: {e}')
 
 
 def parseJsonTree(node, indent, lineCount):
