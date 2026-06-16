@@ -161,8 +161,17 @@ class ConnectionFrame(customtkinter.CTkFrame):
 
     def onConnect(self):
         if not self.connected:
+            try:
+                port = int(self.port.get())
+            except ValueError:
+                ConsoleOutput.log(f"Invalid port: {self.port.get()!r}")
+                return
+            if not (0 < port < 65536):
+                ConsoleOutput.log(f"Port out of range (1-65535): {port}")
+                return
+
             UnixConnection.networking.asyncConnect(
-                self.host.get(), int(self.port.get()), self.connectCallback
+                self.host.get(), port, self.connectCallback
             )
             self.statusLabel.grid_forget()
             self.loadingBar.grid(row=0, column=0, padx=PAD)
@@ -285,8 +294,8 @@ class TelemetryFrame(customtkinter.CTkFrame):
             self.telemetryLabel.configure(text=cols[0])
             self.telemetryLabel2.configure(text=col2)
 
-        except:
-            print(f'Bad Packet: {packets}')
+        except (json.JSONDecodeError, ValueError, KeyError) as e:
+            print(f'Bad Packet ({e}): {packets}')
 
 
 def parseJsonTree(node, indent, lineCount):
