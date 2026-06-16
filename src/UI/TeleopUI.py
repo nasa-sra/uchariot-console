@@ -64,23 +64,57 @@ class TeleopUI:
         self.cmdThread.start()
 
     def command(self):
+        lastScan = 0.0
         while True:
+            pygame.event.pump()  # Process device add/remove + controller state
+
+            # Periodically (~1 Hz) re-scan for controllers so one plugged in
+            # after startup is detected and one unplugged is dropped.
+            now = time.time()
+            if now - lastScan > 1.0:
+                self.refreshController()
+                lastScan = now
+
             if self.controller and self.ctrlMode != CtrlMode.KEYBOARD:
-                pygame.event.pump()  # Update controller state
-                # Axis mapping for Logitech F310 (adjust if needed)
-                left_x = self.controller.get_axis(0)   # Left stick X
-                left_y = self.controller.get_axis(1)   # Left stick Y
-                right_x = self.controller.get_axis(2)  # Right stick X
-                self.vel = -left_y  # Invert Y axis for forward
-                if self.ctrlMode == CtrlMode.ONE_STICK:
-                    self.rot = left_x
-                else:
-                    self.rot = right_x
-                self.updateLabel()
+                try:
+                    # Axis mapping for Logitech F310 (adjust if needed)
+                    left_x = self.controller.get_axis(0)   # Left stick X
+                    left_y = self.controller.get_axis(1)   # Left stick Y
+                    right_x = self.controller.get_axis(2)  # Right stick X
+                    self.vel = -left_y  # Invert Y axis for forward
+                    if self.ctrlMode == CtrlMode.ONE_STICK:
+                        self.rot = left_x
+                    else:
+                        self.rot = right_x
+                    self.updateLabel()
+                except pygame.error:
+                    # Controller was unplugged mid-read; drop it and stop driving.
+                    self.refreshController()
+                    self.vel = 0.0
+                    self.rot = 0.0
+                    self.updateLabel()
             UnixConnection.networking.cmdDrive(self.vel, self.rot)
             if ConsoleOutput.closing:
                 break
             time.sleep(0.02)
+
+    def refreshController(self):
+        """Reconcile self.controller with the currently connected joysticks."""
+        count = pygame.joystick.get_count()
+        if count > 0 and self.controller is None:
+            self.controller = pygame.joystick.Joystick(0)
+            self.setControllerStatus(True)
+        elif count == 0 and self.controller is not None:
+            self.controller = None
+            self.setControllerStatus(False)
+
+    def setControllerStatus(self, connected):
+        text = "Controller Connected" if connected else "Controller Disconnected"
+        color = "green" if connected else "red"
+        # Marshal the widget update back onto the main (tkinter) thread.
+        self.controllerLabel.after(
+            0, lambda: self.controllerLabel.configure(text=text, text_color=color)
+        )
 
     def toggleCtrlMode(self):
         if self.ctrlMode == CtrlMode.ONE_STICK:
