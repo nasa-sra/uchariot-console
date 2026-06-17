@@ -14,7 +14,13 @@ class CtrlMode(Enum):
     ONE_STICK = "One Stick"
     TWO_STICK = "Two Stick"
     KEYBOARD = "Keyboard"
-    
+    # used to save control modes between controller disconnects,
+    # _currentCtrlMode = None
+    # def getCtrlMode():
+    #     return _currentCtrlMode
+    # def changeCtrlMode(newMode):
+    #     _currentCtrlMode = newMode
+
 PAD = 10
 
 class TeleopUI:
@@ -38,6 +44,7 @@ class TeleopUI:
 
         self.controllerLabel.grid(row=0, column=0, padx=PAD, pady=PAD, sticky="n")
         self.ctrlMode = CtrlMode.TWO_STICK
+        # CtrlMode.changeCtrlMode(CtrlMode.TWO_STICK)
 
         self.ctrlModeBtn = customtkinter.CTkButton(
             master=p_tab, text=self.ctrlMode.value, command=self.toggleCtrlMode
@@ -80,7 +87,6 @@ class TeleopUI:
             if self.controller and self.ctrlMode != CtrlMode.KEYBOARD:
                 try:
                     # Axis mapping for Logitech F310 (adjust if needed)
-                    # TODO: If ctrlmode is changed while controller is connected, disable for the first time before running again. Need a variable in uchariot-base to save to and adjust accordingly.
                     left_x = self.controller.get_axis(0)   # Left stick X
                     left_y = self.controller.get_axis(1)   # Left stick Y
                     right_x = self.controller.get_axis(2)  # Right stick X
@@ -94,10 +100,10 @@ class TeleopUI:
                     # Controller was unplugged mid-read; drop it and stop driving.
                     # TODO: This does not work as intended and should just disable the robot while controller is being switched
                     self.refreshController()
-                    UnixConnection.networking.setController('disabled')
                     self.vel = 0.0
                     self.rot = 0.0
                     self.updateLabel()
+                    UnixConnection.networking.disable()
             UnixConnection.networking.cmdDrive(self.vel, self.rot)
             if ConsoleOutput.closing:
                 break
@@ -124,10 +130,14 @@ class TeleopUI:
     def toggleCtrlMode(self):
         if self.ctrlMode == CtrlMode.ONE_STICK:
             self.ctrlMode = CtrlMode.TWO_STICK
+            # CtrlMode.changeCtrlMode(CtrlMode.TWO_STICK)
         elif self.ctrlMode == CtrlMode.TWO_STICK:
             self.ctrlMode = CtrlMode.KEYBOARD
+            # CtrlMode.changeCtrlMode(CtrlMode.KEYBOARD)
         else:
             self.ctrlMode = CtrlMode.ONE_STICK
+            # CtrlMode.changeCtrlMode(CtrlMode.ONE_STICK)
+        UnixConnection.networking.disable()
         self.ctrlModeBtn.configure(text=self.ctrlMode.value)
 
     def updateLabel(self):
