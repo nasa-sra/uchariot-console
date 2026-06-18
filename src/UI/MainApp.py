@@ -214,29 +214,29 @@ class EnableFrame(customtkinter.CTkFrame):
         BOLD = customtkinter.CTkFont(weight="bold")
         self.master = master  
 
-        self.enableBtn = customtkinter.CTkButton(
+        # Single toggle: exactly one of Disabled/Enabled is active at a time and
+        # the selected segment is highlighted to show the current state.
+        self.stateToggle = customtkinter.CTkSegmentedButton(
             master=self,
-            text="Enable",
+            values=["Disabled", "Enabled"],
             font=BOLD,
-            width=150,
             height=40,
-            command=self.onEnable,
-            fg_color="green",
-            hover_color="darkgreen",
+            command=self.onToggle,
         )
-        self.enableBtn.grid(row=0, column=0, sticky="ew", padx=PAD, pady=0)
+        self.stateToggle.set("Disabled")
+        self.stateToggle.grid(row=0, column=0, sticky="ew", padx=PAD, pady=0)
+        self.lastEnabled = False
+        self.applyToggleColor(False)
 
-        self.disableBtn = customtkinter.CTkButton(
-            master=self,
-            text="Disable",
-            font=BOLD,
-            width=150,
-            height=40,
-            command=self.onDisable,
-            fg_color="red",
-            hover_color="darkred",
-        )
-        self.disableBtn.grid(row=0, column=1, sticky="ew", padx=PAD, pady=0)
+        # The enabled state can also change from controller events, tab switches
+        # and disconnects, so poll it and keep the toggle in sync.
+        self.syncToggle()
+
+    def onToggle(self, value):
+        if value == "Enabled":
+            self.onEnable()
+        else:
+            self.onDisable()
 
     def onEnable(self):
         # Go to Teleop tab in HomeTabView
@@ -249,6 +249,25 @@ class EnableFrame(customtkinter.CTkFrame):
         UnixConnection.networking.setController("disabled")
         UnixConnection.networking.disable()
         self.master.master.tab_view.set("Disabled")
+
+    def applyToggleColor(self, enabled):
+        self.stateToggle.configure(
+            selected_color="green" if enabled else "red",
+            selected_hover_color="darkgreen" if enabled else "darkred",
+        )
+
+    def syncToggle(self):
+        enabled = UnixConnection.networking.enabled
+        desired = "Enabled" if enabled else "Disabled"
+        if self.stateToggle.get() != desired:
+            # set() updates the selection without re-firing onToggle.
+            self.stateToggle.set(desired)
+        # Recolor whenever the state changes, including when the user clicks the
+        # toggle directly (selection already matches, so the check above is skipped).
+        if enabled != self.lastEnabled:
+            self.applyToggleColor(enabled)
+            self.lastEnabled = enabled
+        self.after(150, self.syncToggle)
 
         
 class TelemetryFrame(customtkinter.CTkFrame):

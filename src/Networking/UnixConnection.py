@@ -12,6 +12,7 @@ class UnixConnection():
         self.connecting = False
         self.running = True
         self.connected = False
+        self.enabled = False
         self.lastHeartBeatTime = 0
         self.receiveThread = None
 
@@ -63,6 +64,9 @@ class UnixConnection():
             if (int(time() * 1000) - self.lastHeartBeatTime > 500 and self.connected):
                 ConsoleOutput.log("Disconnected")
                 self.connected = False
+                # Drop the enabled latch on disconnect so a reconnect requires
+                # an explicit Enable before the rover can move again.
+                self.enabled = False
                 self.connectCallback(False)
     
     def addPacketCallback(self, callback):
@@ -74,10 +78,15 @@ class UnixConnection():
             # ConsoleOutput.log(f'[{cmdName}] {json.dumps(data)};')
 
     def enable(self):
+        self.enabled = True
         self.sendCommand('enable', {})
         ConsoleOutput.log(f"Enabling")
-    
+
     def disable(self):
+        self.enabled = False
+        # Explicitly zero the drive command so the robot's stored motor state
+        # cannot keep the rover moving after a disable.
+        self.cmdDrive(0.0, 0.0)
         self.sendCommand('disable', {})
         ConsoleOutput.log(f"Disabling")
 
