@@ -32,6 +32,12 @@ class UnixConnection():
             res = self.sock.connect_ex((host, port))
             self.sock.settimeout(0)
 
+            # Register the callback before starting the receive thread so it
+            # can never observe a None connectCallback (race) when a packet or
+            # disconnect is detected immediately after connecting.
+            if callback:
+                self.connectCallback = callback
+
             if (res == 0):
                 ConsoleOutput.log(f"Connected")
                 self.receiveThread = Thread(target=self.receive)
@@ -43,7 +49,6 @@ class UnixConnection():
             self.connecting = False
             self.connected = res == 0
             if callback:
-                self.connectCallback = callback
                 callback(res == 0)
 
     def receive(self):
@@ -56,11 +61,12 @@ class UnixConnection():
                     self.lastHeartBeatTime = int(time() * 1000) # ms
                     if (not self.connected):
                         self.connected = True
-                        self.connectCallback(True)
+                        if self.connectCallback:
+                            self.connectCallback(True)
 
                 if self.packetCallback:
                     self.packetCallback(data)
-                
+
             if (int(time() * 1000) - self.lastHeartBeatTime > 500 and self.connected):
                 ConsoleOutput.log("Disconnected")
                 self.connected = False

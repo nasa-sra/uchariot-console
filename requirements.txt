@@ -1,6 +1,9 @@
 customtkinter
 paramiko
-pygame
+# pygame-ce is a drop-in replacement for pygame (same `import pygame` API) that
+# ships prebuilt wheels for newer Python versions, incl. 3.13/3.14. Upstream
+# pygame has no 3.14 wheel and fails to build from source on Windows.
+pygame-ce
 pyglet
 pynput
 
