@@ -259,6 +259,13 @@ class EnableFrame(customtkinter.CTkFrame):
         UnixConnection.networking.disable()
         self.master.master.tab_view.set("Disabled")
 
+    def voltageMeter (self):
+        # Get the voltage from the networking module
+        voltage = UnixConnection.networking.getVoltage()
+        current = UnixConnection.networking.getCurrent()
+        self.voltageMeter.configure(text=f"Voltage: {voltage:.2f} V")
+        self.voltageMeter.configure(text=f"Current: {current:.2f} A")
+
     def applyToggleColor(self, enabled):
         self.stateToggle.configure(
             selected_color="green" if enabled else "red",
