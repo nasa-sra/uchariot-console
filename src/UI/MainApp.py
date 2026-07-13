@@ -43,14 +43,17 @@ class App(customtkinter.CTk):
 
         self.leftColumnFrame = customtkinter.CTkFrame(self, fg_color="transparent")
         self.leftColumnFrame.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="nsew" )
-        self.leftColumnFrame.grid_rowconfigure(1, weight=1)
+        self.leftColumnFrame.grid_rowconfigure(2, weight=1)
         self.leftColumnFrame.grid_columnconfigure(0, weight=1)
 
         self.enableFrame = EnableFrame(self.leftColumnFrame, fg_color="transparent")
         self.enableFrame.grid(row=0, column=0, padx=PAD, pady=PAD)
 
+        self.voltageMeterFrame = VoltageMeterFrame(self.leftColumnFrame)
+        self.voltageMeterFrame.grid(row=1, column=0, padx=PAD, pady=(0, PAD), sticky="ew")
+
         self.telemetryFrame = TelemetryFrame(self.leftColumnFrame)
-        self.telemetryFrame.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="nsew" )
+        self.telemetryFrame.grid(row=2, column=0, padx=PAD, pady=PAD, sticky="nsew" )
 
         self.tab_view = HomeTabView(self)
         self.tab_view.grid(row=1, column=1, padx=PAD, pady=(10, 20), sticky="nsew")
@@ -259,13 +262,6 @@ class EnableFrame(customtkinter.CTkFrame):
         UnixConnection.networking.disable()
         self.master.master.tab_view.set("Disabled")
 
-    def voltageMeter (self):
-        # Get the voltage from the networking module
-        voltage = UnixConnection.networking.getVoltage()
-        current = UnixConnection.networking.getCurrent()
-        self.voltageMeter.configure(text=f"Voltage: {voltage:.2f} V")
-        self.voltageMeter.configure(text=f"Current: {current:.2f} A")
-
     def applyToggleColor(self, enabled):
         self.stateToggle.configure(
             selected_color="green" if enabled else "red",
@@ -286,6 +282,48 @@ class EnableFrame(customtkinter.CTkFrame):
         self.after(150, self.syncToggle)
 
         
+class VoltageMeterFrame(customtkinter.CTkFrame):
+    """Dedicated readout for the INA228 voltage meter reported by the base.
+
+    Values arrive as part of the robot telemetry stream and are cached on the
+    networking module; this frame polls that cache so the display stays live
+    regardless of packet timing.
+    """
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        BOLD = customtkinter.CTkFont(weight="bold")
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.titleLabel = customtkinter.CTkLabel(self, text="Voltage Meter", font=BOLD)
+        self.titleLabel.grid(row=0, column=0, padx=PAD, pady=(PAD, 2), sticky="w")
+
+        self.voltageLabel = customtkinter.CTkLabel(self, text="Voltage:  -- V", anchor="w")
+        self.voltageLabel.grid(row=1, column=0, padx=PAD, pady=1, sticky="w")
+
+        self.currentLabel = customtkinter.CTkLabel(self, text="Current:  -- A", anchor="w")
+        self.currentLabel.grid(row=2, column=0, padx=PAD, pady=1, sticky="w")
+
+        self.powerLabel = customtkinter.CTkLabel(self, text="Power:    -- W", anchor="w")
+        self.powerLabel.grid(row=3, column=0, padx=PAD, pady=(1, PAD), sticky="w")
+
+        self.refresh()
+
+    def refresh(self):
+        net = UnixConnection.networking
+        if net.connected:
+            self.voltageLabel.configure(text=f"Voltage:  {net.getVoltage():.2f} V")
+            self.currentLabel.configure(text=f"Current:  {net.getCurrent():.2f} A")
+            self.powerLabel.configure(text=f"Power:    {net.getPower():.2f} W")
+        else:
+            self.voltageLabel.configure(text="Voltage:  -- V")
+            self.currentLabel.configure(text="Current:  -- A")
+            self.powerLabel.configure(text="Power:    -- W")
+        self.after(200, self.refresh)
+
+
 class TelemetryFrame(customtkinter.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
@@ -305,11 +343,10 @@ class TelemetryFrame(customtkinter.CTkFrame):
         UnixConnection.networking.addPacketCallback(self.onPacket)
 
     def onPacket(self, packet):
-        packets = packet.decode("utf-8")
-        lastPacketPos = packets.rfind('{"robot":')
+        data = UnixConnection.networking.state
+        if not data:
+            return
         try:
-            data = json.loads(packets[lastPacketPos:])
-
             output, x = parseJsonTree(data, 0, 0)
             cols = output.split("BREAK")
 
@@ -320,8 +357,6 @@ class TelemetryFrame(customtkinter.CTkFrame):
             self.telemetryLabel.configure(text=cols[0])
             self.telemetryLabel2.configure(text=col2)
 
-        except (json.JSONDecodeError, ValueError, KeyError) as e:
-            print(f'Bad Packet ({e}): {packets}')
         except Exception as e:
             print(f'Unexpected error processing packet: {e}')
 

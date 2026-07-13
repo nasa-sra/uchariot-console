@@ -19,6 +19,8 @@ class UnixConnection():
         self.connectCallback = None
         self.packetCallback = None
 
+        self.state = {}
+
     def asyncConnect(self, host: str, port: int, callback = None):
         if (not self.connecting):
             self.connecting = True
@@ -32,9 +34,6 @@ class UnixConnection():
             res = self.sock.connect_ex((host, port))
             self.sock.settimeout(0)
 
-            # Register the callback before starting the receive thread so it
-            # can never observe a None connectCallback (race) when a packet or
-            # disconnect is detected immediately after connecting.
             if callback:
                 self.connectCallback = callback
 
@@ -63,6 +62,7 @@ class UnixConnection():
                         self.connected = True
                         if self.connectCallback:
                             self.connectCallback(True)
+                    self._cacheState(data)
 
                 if self.packetCallback:
                     self.packetCallback(data)
@@ -73,8 +73,37 @@ class UnixConnection():
                 # Drop the enabled latch on disconnect so a reconnect requires
                 # an explicit Enable before the rover can move again.
                 self.enabled = False
+                # Clear cached telemetry so stale readings don't linger on the
+                # UI after the rover goes away.
+                self.state = {}
                 self.connectCallback(False)
-    
+
+    def _cacheState(self, data):
+        packets = data.decode("utf-8", errors="ignore")
+        lastPacketPos = packets.rfind('{"robot":')
+        if lastPacketPos < 0:
+            return
+        try:
+            parsed = json.loads(packets[lastPacketPos:])
+            self.state = parsed.get("robot", {})
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    def _voltageMeterValue(self, key):
+        try:
+            return float(self.state.get("voltageMeter", {}).get(key, 0.0))
+        except (AttributeError, TypeError, ValueError):
+            return 0.0
+
+    def getVoltage(self):
+        return self._voltageMeterValue("voltage")
+
+    def getCurrent(self):
+        return self._voltageMeterValue("current")
+
+    def getPower(self):
+        return self._voltageMeterValue("power")
+
     def addPacketCallback(self, callback):
         self.packetCallback = callback
 
