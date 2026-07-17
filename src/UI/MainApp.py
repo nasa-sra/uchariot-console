@@ -186,8 +186,7 @@ class ConnectionFrame(customtkinter.CTkFrame):
     def onStart(self):
         def onStartThread(host):
             SSHConnection.conn.connect(host)
-            SSHConnection.conn.send_cmd("sh /home/uchariot/uchariot-base/start.sh")
-            SSHConnection.conn.close()
+            SSHConnection.conn.send_cmd_streaming("sh /home/uchariot/uchariot-base/start.sh")
 
         t = threading.Thread(target=onStartThread, args=(self.host.get(),))
         t.start()

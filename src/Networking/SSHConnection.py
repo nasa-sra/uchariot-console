@@ -1,5 +1,6 @@
 # src/Networking/SSHConnection.py
 import os
+import threading
 import paramiko
 
 import src.UI.ConsoleOutput as ConsoleOutput
@@ -26,14 +27,13 @@ class SSHConnection:
 
     def send_cmd(self, cmd, use_sudo=True, timeout=None):
         """
-        Execute a command and return (stdout, stderr).
-        Setting use_sudo=True will attempt to run with sudo using the stored PASSWORD.
+        Execute a short command and return (stdout, stderr).
+        Blocks until the command exits — do not use for long-running processes.
         """
         prefix = "sudo -S -p '' " if use_sudo else ""
         ConsoleOutput.log(f"(ssh) {USERNAME}@{self.host}:~$ {cmd}")
         _stdin, _stdout, _stderr = self.client.exec_command(prefix + cmd, timeout=timeout)
         if use_sudo:
-            # write password and flush for sudo
             _stdin.write(PASSWORD + "\n")
             _stdin.flush()
 
@@ -44,6 +44,29 @@ class SSHConnection:
         if err:
             ConsoleOutput.log(f"(ssh err) {err.strip()}")
         return out, err
+
+    def send_cmd_streaming(self, cmd, use_sudo=True):
+        """
+        Execute a long-running command and stream its stdout/stderr
+        to the console in background threads. Returns immediately.
+        """
+        prefix = "sudo -S -p '' " if use_sudo else ""
+        ConsoleOutput.log(f"(ssh) {USERNAME}@{self.host}:~$ {cmd}")
+        _stdin, _stdout, _stderr = self.client.exec_command(prefix + cmd)
+        if use_sudo:
+            _stdin.write(PASSWORD + "\n")
+            _stdin.flush()
+
+        def stream(channel, tag=""):
+            for line in iter(channel.readline, ""):
+                if ConsoleOutput.closing:
+                    break
+                text = line.rstrip()
+                if text:
+                    ConsoleOutput.log(f"{tag}{text}")
+
+        threading.Thread(target=stream, args=(_stdout,), daemon=True).start()
+        threading.Thread(target=stream, args=(_stderr, "(ssh err) "), daemon=True).start()
 
     def send_path(self, filePath, remote_dir="/home/uchariot/uchariot-base/build/paths"):
         """
