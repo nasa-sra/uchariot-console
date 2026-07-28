@@ -252,7 +252,8 @@ class EnableFrame(customtkinter.CTkFrame):
     def onEnable(self):
         # Go to Teleop tab in HomeTabView
         UnixConnection.networking.setController("teleop")
-        UnixConnection.networking.enable()
+        if not UnixConnection.networking.enable():
+            return
         self.master.master.tab_view.set("Teleop")
 
     def onDisable(self):
@@ -268,6 +269,10 @@ class EnableFrame(customtkinter.CTkFrame):
         )
 
     def syncToggle(self):
+        if UnixConnection.networking.robotEnabled() is False and UnixConnection.networking.enabled:
+            UnixConnection.networking.enabled = False
+            ConsoleOutput.log("Robot reports disabled, syncing console")
+
         enabled = UnixConnection.networking.enabled
         desired = "Enabled" if enabled else "Disabled"
         if self.stateToggle.get() != desired:

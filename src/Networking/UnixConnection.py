@@ -6,6 +6,8 @@ from threading import Thread
 
 import src.UI.ConsoleOutput as ConsoleOutput
 
+ENABLE_SETTLE_MS = 500
+
 class UnixConnection():
     def __init__(self):
         self.sock = None
@@ -13,6 +15,7 @@ class UnixConnection():
         self.running = True
         self.connected = False
         self.enabled = False
+        self.lastEnableCmdTime = 0
         self.lastHeartBeatTime = 0
         self.receiveThread = None
 
@@ -104,6 +107,17 @@ class UnixConnection():
     def getPower(self):
         return self._voltageMeterValue("power")
 
+    def robotEnabled(self):
+        """The robot's own reported enable state, or None when unknown."""
+        if not self.connected:
+            return None
+        if int(time() * 1000) - self.lastEnableCmdTime < ENABLE_SETTLE_MS:
+            return None
+        value = self.state.get("enabled")
+        if not isinstance(value, bool):
+            return None
+        return value
+
     def addPacketCallback(self, callback):
         self.packetCallback = callback
 
@@ -113,12 +127,18 @@ class UnixConnection():
             # ConsoleOutput.log(f'[{cmdName}] {json.dumps(data)};')
 
     def enable(self):
+        if not self.connected:
+            ConsoleOutput.log("Not connected, cannot enable")
+            return False
         self.enabled = True
+        self.lastEnableCmdTime = int(time() * 1000)
         self.sendCommand('enable', {})
         ConsoleOutput.log(f"Enabling")
+        return True
 
     def disable(self):
         self.enabled = False
+        self.lastEnableCmdTime = int(time() * 1000)
         # Explicitly zero the drive command so the robot's stored motor state
         # cannot keep the rover moving after a disable.
         self.cmdDrive(0.0, 0.0)
