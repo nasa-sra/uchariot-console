@@ -45,15 +45,19 @@ class App(customtkinter.CTk):
         self.leftColumnFrame.grid(row=1, column=0, padx=PAD, pady=PAD, sticky="nsew" )
         self.leftColumnFrame.grid_rowconfigure(2, weight=1)
         self.leftColumnFrame.grid_columnconfigure(0, weight=1)
+        self.leftColumnFrame.grid_columnconfigure(1, weight=1)
 
         self.enableFrame = EnableFrame(self.leftColumnFrame, fg_color="transparent")
-        self.enableFrame.grid(row=0, column=0, padx=PAD, pady=PAD)
+        self.enableFrame.grid(row=0, column=0, padx=PAD, pady=PAD, sticky="w")
+
+        self.orientationFrame = OrientationFrame(self.leftColumnFrame, fg_color="transparent")
+        self.orientationFrame.grid(row=0, column=1, padx=PAD, pady=PAD, sticky="w")
 
         self.voltageMeterFrame = VoltageMeterFrame(self.leftColumnFrame)
-        self.voltageMeterFrame.grid(row=1, column=0, padx=PAD, pady=(0, PAD), sticky="ew")
+        self.voltageMeterFrame.grid(row=1, column=0, columnspan=2, padx=PAD, pady=(0, PAD), sticky="ew")
 
         self.telemetryFrame = TelemetryFrame(self.leftColumnFrame)
-        self.telemetryFrame.grid(row=2, column=0, padx=PAD, pady=PAD, sticky="nsew" )
+        self.telemetryFrame.grid(row=2, column=0, columnspan=2, padx=PAD, pady=PAD, sticky="nsew" )
 
         self.tab_view = HomeTabView(self)
         self.tab_view.grid(row=1, column=1, padx=PAD, pady=(10, 20), sticky="nsew")
@@ -286,32 +290,36 @@ class EnableFrame(customtkinter.CTkFrame):
         self.after(150, self.syncToggle)
 
 class OrientationFrame(customtkinter.CTkFrame):
-    def __init__(self, master, **kwargs): 
+    def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
         BOLD = customtkinter.CTkFont(weight="bold")
-        self.master = master  
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-        # Single toggle: exactly one of Disabled/Enabled is active at a time and
-        # the selected segment is highlighted to show the current state.
-        self.stateToggle = customtkinter.CTkSegmentedButton(
-            master=self,
-            values=["Forward", "Reverse"],
+        self.resetButton = customtkinter.CTkButton(
+            self,
+            text="Reset Heading",
             font=BOLD,
             height=40,
-            command=self.onOrient,
+            command=self.onResetHeading,
         )
-        self.stateToggle.set("Disabled")
-        self.stateToggle.grid(row=0, column=0, sticky="ew", padx=PAD, pady=0)
-        self.lastEnabled = False
-        self.applyToggleColor(False)
+        self.resetButton.grid(row=0, column=0, padx=(0, PAD // 2), pady=0, sticky="ew")
 
-        # The enabled state can also change from controller events, tab switches
-        # and disconnects, so poll it and keep the toggle in sync.
-        # self.syncToggle()
+        self.reverseButton = customtkinter.CTkButton(
+            self,
+            text="Reverse Heading",
+            font=BOLD,
+            height=40,
+            command=self.onReverseHeading,
+        )
+        self.reverseButton.grid(row=0, column=1, padx=(PAD // 2, 0), pady=0, sticky="ew")
 
-    def onOrient():
+    def onResetHeading(self):
+        UnixConnection.networking.resetHeading()
 
+    def onReverseHeading(self):
+        UnixConnection.networking.reverseHeading()
 
 
 

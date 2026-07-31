@@ -146,16 +146,19 @@ class UnixConnection():
         self.sendCommand('disable', {})
         ConsoleOutput.log(f"Disabling")
 
+    def _sendHeadingCommand(self, commandNames):
+        for commandName in commandNames:
+            self.sendCommand(commandName, {})
+
     def reverseHeading(self):
         self.heading = True
-        self.sendCommand('reverse', {})
-        ConsoleOutput.log(f"Reverse Heading")
+        self._sendHeadingCommand(["reverse_heading", "reverse heading"])
+        ConsoleOutput.log("Reverse Heading")
 
-
-    def resetHeading(self): 
+    def resetHeading(self):
         self.heading = False
-        self.sendCommand('reset', {})
-        ConsoleOutput.log(f"Reset Heading")
+        self._sendHeadingCommand(["reset_heading", "reset heading"])
+        ConsoleOutput.log("Reset Heading")
 
     def setController(self, ctr):
         if self.connected:
@@ -177,8 +180,7 @@ class UnixConnection():
         ConsoleOutput.log(f"Stopping path")
 
     def cmdResetHeading(self):
-        self.sendCommand('reset_heading', {})
-        ConsoleOutput.log(f"Resetting heading")
+        self.resetHeading()
 
     def cmdResetPose(self):
         self.sendCommand('reset_pose', {})
