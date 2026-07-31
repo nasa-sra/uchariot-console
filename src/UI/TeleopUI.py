@@ -169,6 +169,7 @@ class TeleopUI:
         self.controllerLabel.after(
             0, lambda: self.controllerLabel.configure(text=text, text_color=color)
         )
+        
     def toggleCtrlMode(self):
         if self.ctrlMode == CtrlMode.ONE_STICK:
             self.ctrlMode = CtrlMode.TWO_STICK
