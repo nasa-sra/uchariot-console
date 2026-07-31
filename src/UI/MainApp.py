@@ -296,6 +296,7 @@ class OrientationFrame(customtkinter.CTkFrame):
         BOLD = customtkinter.CTkFont(weight="bold")
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
 
         self.resetButton = customtkinter.CTkButton(
             self,
@@ -313,13 +314,36 @@ class OrientationFrame(customtkinter.CTkFrame):
             height=40,
             command=self.onReverseHeading,
         )
-        self.reverseButton.grid(row=0, column=1, padx=(PAD // 2, 0), pady=0, sticky="ew")
+        self.reverseButton.grid(row=0, column=1, padx=(PAD // 2, PAD // 2), pady=0, sticky="ew")
+
+        self.coastButton = customtkinter.CTkButton(
+            self,
+            text="Coast Back Motors",
+            font=BOLD,
+            height=40,
+            command=self.onCoastBackMotors,
+            fg_color="red",
+            hover_color="darkred",
+        )
+        self.coastButton.grid(row=0, column=2, padx=(PAD // 2, 0), pady=0, sticky="ew")
+        self.coastEnabled = False
 
     def onResetHeading(self):
         UnixConnection.networking.resetHeading()
 
     def onReverseHeading(self):
         UnixConnection.networking.reverseHeading()
+
+    def onCoastBackMotors(self):
+        self.coastEnabled = not self.coastEnabled
+        UnixConnection.networking.setCoastBackMotors(self.coastEnabled)
+        self.applyCoastButtonColor()
+
+    def applyCoastButtonColor(self):
+        self.coastButton.configure(
+            fg_color="green" if self.coastEnabled else "red",
+            hover_color="darkgreen" if self.coastEnabled else "darkred",
+        )
 
 
 

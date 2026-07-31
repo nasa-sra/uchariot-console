@@ -16,6 +16,7 @@ class UnixConnection():
         self.connected = False
         self.enabled = False
         self.heading = False
+        self.coastBackMotors = False
         self.lastEnableCmdTime = 0
         self.lastHeartBeatTime = 0
         self.receiveThread = None
@@ -146,9 +147,12 @@ class UnixConnection():
         self.sendCommand('disable', {})
         ConsoleOutput.log(f"Disabling")
 
-    def _sendHeadingCommand(self, commandNames):
+    def _sendCommandNames(self, commandNames):
         for commandName in commandNames:
             self.sendCommand(commandName, {})
+
+    def _sendHeadingCommand(self, commandNames):
+        self._sendCommandNames(commandNames)
 
     def reverseHeading(self):
         self.heading = True
@@ -159,6 +163,13 @@ class UnixConnection():
         self.heading = False
         self._sendHeadingCommand(["reset_heading", "reset heading"])
         ConsoleOutput.log("Reset Heading")
+
+    def setCoastBackMotors(self, enabled):
+        self.coastBackMotors = enabled
+        self._sendCommandNames(["coast_back_motors", "coast back motors"])
+        ConsoleOutput.log(
+            "Coast Back Motors Enabled" if enabled else "Coast Back Motors Disabled"
+        )
 
     def setController(self, ctr):
         if self.connected:
