@@ -15,6 +15,7 @@ class UnixConnection():
         self.running = True
         self.connected = False
         self.enabled = False
+        self.heading = False
         self.lastEnableCmdTime = 0
         self.lastHeartBeatTime = 0
         self.receiveThread = None
@@ -144,6 +145,17 @@ class UnixConnection():
         self.cmdDrive(0.0, 0.0)
         self.sendCommand('disable', {})
         ConsoleOutput.log(f"Disabling")
+
+    def reverseHeading(self):
+        self.heading = True
+        self.sendCommand('reverse', {})
+        ConsoleOutput.log(f"Reverse Heading")
+
+
+    def resetHeading(self): 
+        self.heading = False
+        self.sendCommand('reset', {})
+        ConsoleOutput.log(f"Reset Heading")
 
     def setController(self, ctr):
         if self.connected:

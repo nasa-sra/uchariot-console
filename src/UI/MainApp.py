@@ -285,6 +285,36 @@ class EnableFrame(customtkinter.CTkFrame):
             self.lastEnabled = enabled
         self.after(150, self.syncToggle)
 
+class OrientationFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs): 
+        super().__init__(master, **kwargs)
+
+        BOLD = customtkinter.CTkFont(weight="bold")
+        self.master = master  
+
+        # Single toggle: exactly one of Disabled/Enabled is active at a time and
+        # the selected segment is highlighted to show the current state.
+        self.stateToggle = customtkinter.CTkSegmentedButton(
+            master=self,
+            values=["Forward", "Reverse"],
+            font=BOLD,
+            height=40,
+            command=self.onOrient,
+        )
+        self.stateToggle.set("Disabled")
+        self.stateToggle.grid(row=0, column=0, sticky="ew", padx=PAD, pady=0)
+        self.lastEnabled = False
+        self.applyToggleColor(False)
+
+        # The enabled state can also change from controller events, tab switches
+        # and disconnects, so poll it and keep the toggle in sync.
+        # self.syncToggle()
+
+    def onOrient():
+
+
+
+
         
 class VoltageMeterFrame(customtkinter.CTkFrame):
     """Dedicated readout for the INA228 voltage meter reported by the base.
